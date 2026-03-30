@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS 학습 로드맵</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --surface: #0e1419;
+  --border: #1e2832;
+  --text: #cdd9e5;
+  --muted: #545d68;
+  --python:   #3fb950;
+  --pandas:   #58a6ff;
+  --numpy:    #f78166;
+  --sklearn:  #d2a8ff;
+  --stats:    #e3b341;
+  --scipy:    #39c5cf;
+  --locked:   #1e2832;
+  --locked-text: #3d4853;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* animated star bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(63,185,80,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(88,166,255,.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* grid */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; width: 100%; max-width: 960px; padding: 48px 24px 80px; }
+
+header { text-align: center; margin-bottom: 64px; }
+.header-badge {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--python);
+  border: 1px solid rgba(63,185,80,.35);
+  background: rgba(63,185,80,.07);
+  padding: 5px 14px;
+  border-radius: 99px;
+  margin-bottom: 20px;
+}
+header h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #cdd9e5 0%, #7b8fa8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+header p { font-size: 14px; color: var(--muted); }
+
+/* path line */
+.roadmap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: center;
+}
+
+.connector {
+  width: 2px;
+  height: 48px;
+  background: linear-gradient(to bottom, var(--from-color, #1e2832), var(--to-color, #1e2832));
+  position: relative;
+  z-index: 1;
+}
+.connector::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--to-color, #1e2832);
+}
+
+/* NODE */
+.lib-node {
+  width: 100%;
+  max-width: 540px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 24px 28px;
+  cursor: pointer;
+  position: relative;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.lib-node::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .3s;
+  border-radius: 16px;
+}
+.lib-node.unlocked::before {
+  background: radial-gradient(ellipse 80% 60% at 30% 50%, rgba(var(--glow), .08), transparent 70%);
+}
+.lib-node.unlocked:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: var(--node-color);
+  box-shadow: 0 8px 32px rgba(var(--glow), .18), 0 0 0 1px rgba(var(--glow), .15);
+}
+.lib-node.unlocked:hover::before { opacity: 1; }
+
+.lib-node.locked {
+  cursor: not-allowed;
+  opacity: .55;
+  filter: grayscale(.4);
+}
+
+.node-header { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; }
+.node-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.node-meta { flex: 1; }
+.node-name {
+  font-family: 'Space Mono', monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+.node-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+.node-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  letter-spacing: 1px;
+}
+.badge-start { background: rgba(63,185,80,.15); color: var(--python); border: 1px solid rgba(63,185,80,.3); }
+.badge-locked { background: rgba(30,40,50,.8); color: var(--muted); border: 1px solid var(--border); }
+.badge-done { background: rgba(63,185,80,.15); color: var(--python); border: 1px solid rgba(63,185,80,.3); }
+
+.node-progress-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.node-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width .6s ease;
+}
+
+.node-topics {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.topic-chip {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'Space Mono', monospace;
+}
+
+.lock-icon {
+  position: absolute;
+  top: 50%; right: 24px;
+  transform: translateY(-50%);
+  font-size: 22px;
+  opacity: .3;
+}
+
+/* progress total */
+.total-progress {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.total-ring-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 32px;
+}
+.ring-label { text-align: left; }
+.ring-label .val {
+  font-family: 'Space Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--python);
+}
+.ring-label .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.progress-segments {
+  display: flex;
+  gap: 4px;
+  height: 8px;
+  width: 200px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: var(--border);
+  margin-top: 10px;
+}
+.seg { height: 100%; transition: flex .6s; }
+
+/* enter animation */
+.lib-node { animation: nodeIn .5s both; }
+.lib-node:nth-child(1) { animation-delay: .05s; }
+.lib-node:nth-child(3) { animation-delay: .15s; }
+.lib-node:nth-child(5) { animation-delay: .25s; }
+.lib-node:nth-child(7) { animation-delay: .35s; }
+.lib-node:nth-child(9) { animation-delay: .45s; }
+.lib-node:nth-child(11){ animation-delay: .55s; }
+@keyframes nodeIn {
+  from { opacity:0; transform: translateY(20px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* toast */
+.toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: #1c2128; border: 1px solid var(--border);
+  color: var(--text); font-size: 13px; padding: 12px 20px;
+  border-radius: 10px; z-index: 999;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="header-badge">DATA SCIENCE ROADMAP</div>
+    <h1>Python → ML 완전 정복</h1>
+    <p>기초부터 머신러닝까지 · 단계별 잠금 해제 · 실기 시험 대비</p>
+  </header>
+
+  <div class="total-progress">
+    <div class="total-ring-wrap">
+      <div class="ring-label">
+        <div class="val" id="totalPct">0%</div>
+        <div class="sub">전체 진행률</div>
+        <div class="progress-segments" id="progressSegs"></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:2">
+        <div>🐍 Python &nbsp;<span id="p0" style="color:var(--muted)">—</span></div>
+        <div>🐼 Pandas &nbsp;<span id="p1" style="color:var(--muted)">—</span></div>
+        <div>🔢 NumPy &nbsp;&nbsp;<span id="p2" style="color:var(--muted)">—</span></div>
+        <div>🤖 sklearn &nbsp;<span id="p3" style="color:var(--muted)">—</span></div>
+        <div>📊 statsmodels <span id="p4" style="color:var(--muted)">—</span></div>
+        <div>🔬 SciPy &nbsp;&nbsp;<span id="p5" style="color:var(--muted)">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="roadmap" id="roadmap"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LIBS = [
+  {
+    id: 'python', name: 'Python', icon: '🐍',
+    color: '#3fb950', glow: '63,185,80',
+    sub: 'Section 1~5 · 28개 항목 · 프로그래밍 기초',
+    topics: ['객체·변수', '자료형', '함수', 'Containers', '제어문', '모듈'],
+    href: 'python.html',
+    totalItems: 28
+  },
+  {
+    id: 'pandas', name: 'Pandas', icon: '🐼',
+    color: '#58a6ff', glow: '88,166,255',
+    sub: 'DataFrame · Series · 데이터 분석 핵심',
+    topics: ['DataFrame', 'Series', 'groupby', 'merge', 'pivot', 'plot'],
+    href: 'pandas.html',
+    totalItems: 30
+  },
+  {
+    id: 'numpy', name: 'NumPy', icon: '🔢',
+    color: '#f78166', glow: '247,129,102',
+    sub: 'ndarray · 수치 연산 · 행렬 계산',
+    topics: ['ndarray', 'reshape', 'broadcast', 'indexing', 'linalg', 'random'],
+    href: 'numpy.html',
+    totalItems: 24
+  },
+  {
+    id: 'sklearn', name: 'scikit-learn', icon: '🤖',
+    color: '#d2a8ff', glow: '210,168,255',
+    sub: '머신러닝 · 분류·회귀·군집 · Pipeline',
+    topics: ['preprocessing', '분류', '회귀', '군집', 'Pipeline', '평가지표'],
+    href: 'sklearn.html',
+    totalItems: 36
+  },
+  {
+    id: 'stats', name: 'statsmodels', icon: '📊',
+    color: '#e3b341', glow: '227,179,65',
+    sub: '통계 검정 · 회귀분석 · 시계열',
+    topics: ['OLS', '가설검정', 'ANOVA', '시계열', 'logit', 'summary'],
+    href: 'statsmodels.html',
+    totalItems: 20
+  },
+  {
+    id: 'scipy', name: 'SciPy', icon: '🔬',
+    color: '#39c5cf', glow: '57,197,207',
+    sub: '과학 계산 · 최적화 · 신호처리',
+    topics: ['stats', 'optimize', 'integrate', 'signal', 'sparse', 'fft'],
+    href: 'scipy.html',
+    totalItems: 18
+  }
+];
+
+function getProgress(libId) {
+  const raw = localStorage.getItem(`progress_${libId}`);
+  return raw ? JSON.parse(raw) : { completed: 0, total: LIBS.find(l=>l.id===libId)?.totalItems||1 };
+}
+
+function isUnlocked(idx) {
+  if (idx === 0) return true;
+  const prev = LIBS[idx-1];
+  const prog = getProgress(prev.id);
+  return prog.completed >= Math.ceil(prog.total * 0.7);
+}
+
+function renderRoadmap() {
+  const rm = document.getElementById('roadmap');
+  rm.innerHTML = '';
+  let totalDone = 0, totalAll = 0;
+
+  LIBS.forEach((lib, i) => {
+    const unlocked = isUnlocked(i);
+    const prog = getProgress(lib.id);
+    const pct = Math.round((prog.completed / prog.total) * 100);
+    totalDone += prog.completed;
+    totalAll += prog.total;
+
+    // connector
+    if (i > 0) {
+      const prev = LIBS[i-1];
+      const conn = document.createElement('div');
+      conn.className = 'connector';
+      conn.style.setProperty('--from-color', prev.color + '60');
+      conn.style.setProperty('--to-color', unlocked ? lib.color + '60' : '#1e2832');
+      rm.appendChild(conn);
+    }
+
+    const node = document.createElement('div');
+    node.className = 'lib-node ' + (unlocked ? 'unlocked' : 'locked');
+    node.style.setProperty('--node-color', lib.color);
+    node.style.setProperty('--glow', lib.glow);
+
+    const badgeHTML = i === 0
+      ? `<span class="node-badge badge-start">START</span>`
+      : unlocked
+        ? `<span class="node-badge badge-start">UNLOCKED</span>`
+        : `<span class="node-badge badge-locked">🔒 LOCKED</span>`;
+
+    node.innerHTML = `
+      <div class="node-header">
+        <div class="node-icon" style="background:rgba(${lib.glow},.12);border-color:rgba(${lib.glow},.25)">${lib.icon}</div>
+        <div class="node-meta">
+          <div class="node-name" style="color:${unlocked ? lib.color : 'var(--muted)'}">${lib.name}</div>
+          <div class="node-sub">${lib.sub}</div>
+        </div>
+        ${badgeHTML}
+      </div>
+      <div class="node-progress-bar">
+        <div class="node-progress-fill" style="width:${pct}%;background:${lib.color}"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="node-topics">
+          ${lib.topics.map(t => `<span class="topic-chip">${t}</span>`).join('')}
+        </div>
+        <span style="font-family:'Space Mono',monospace;font-size:11px;color:${unlocked ? lib.color : 'var(--muted)'}">
+          ${prog.completed}/${prog.total}
+        </span>
+      </div>
+      ${!unlocked ? '<div class="lock-icon">🔒</div>' : ''}
+    `;
+
+    if (unlocked) {
+      node.addEventListener('click', () => {
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity .3s';
+        setTimeout(() => { window.location.href = lib.href; }, 300);
+      });
+    } else {
+      node.addEventListener('click', () => {
+        const prev = LIBS[i-1];
+        showToast(`🔒 ${prev.name} 학습을 70% 이상 완료하면 잠금이 해제됩니다`);
+      });
+    }
+
+    rm.appendChild(node);
+
+    // mini progress labels
+    const statEl = document.getElementById('p' + i);
+    if (statEl) {
+      statEl.textContent = `${pct}%`;
+      statEl.style.color = unlocked ? lib.color : 'var(--muted)';
+    }
+  });
+
+  // total
+  const totalPct = totalAll ? Math.round((totalDone/totalAll)*100) : 0;
+  document.getElementById('totalPct').textContent = totalPct + '%';
+
+  const segs = document.getElementById('progressSegs');
+  segs.innerHTML = LIBS.map((lib, i) => {
+    const p = getProgress(lib.id);
+    const w = p.total / totalAll * 100;
+    const fill = (p.completed / p.total) * w;
+    return `<div class="seg" style="background:${lib.color};flex:${fill};opacity:.9"></div>
+            <div class="seg" style="background:var(--border);flex:${w - fill}"></div>`;
+  }).join('');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+renderRoadmap();
+
+// page fade in
+document.body.style.opacity = '0';
+document.body.style.transition = 'opacity .4s';
+requestAnimationFrame(() => { document.body.style.opacity = '1'; });
+</script>
+</body>
+</html>

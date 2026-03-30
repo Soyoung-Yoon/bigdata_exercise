@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 학습 맵</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c10;
+  --surface: #0e1419;
+  --card: #131920;
+  --border: #1e2832;
+  --text: #cdd9e5;
+  --muted: #545d68;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --orange: #f78166;
+  --purple: #d2a8ff;
+  --yellow: #e3b341;
+  --done-bg: rgba(63,185,80,.08);
+  --done-border: rgba(63,185,80,.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.012) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none; z-index: 0;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,12,16,.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex; align-items: center; gap: 16px;
+  height: 56px;
+}
+.back-btn {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px; color: var(--muted);
+  background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px;
+  cursor: pointer; transition: all .2s;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.back-btn:hover { color: var(--text); border-color: var(--green); }
+.topbar-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px; font-weight: 700; color: var(--green);
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.top-progress-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px; color: var(--muted);
+}
+.top-progress-text span { color: var(--green); font-weight: 700; }
+.top-bar-track {
+  width: 120px; height: 5px;
+  background: var(--border); border-radius: 99px; overflow: hidden;
+}
+.top-bar-fill {
+  height: 100%; background: var(--green); border-radius: 99px;
+  transition: width .5s ease;
+}
+
+/* ── LAYOUT ── */
+.page { position: relative; z-index: 1; padding: 32px 24px 80px; max-width: 1000px; margin: 0 auto; }
+
+/* ── SECTION ── */
+.section-block { margin-bottom: 40px; }
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; letter-spacing: 1px;
+}
+.section-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.section-pct {
+  margin-left: auto;
+  font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted);
+}
+.section-bar {
+  height: 3px; background: var(--border); border-radius: 99px;
+  overflow: hidden; margin-bottom: 14px;
+}
+.section-bar-fill {
+  height: 100%; border-radius: 99px; transition: width .5s;
+}
+
+/* ── NODE GRID ── */
+.node-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.topic-node {
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 14px 16px;
+  cursor: pointer;
+  position: relative;
+  transition: all .25s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  min-height: 80px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.topic-node::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--node-color, var(--border));
+  opacity: 0; transition: opacity .2s;
+}
+.topic-node.unlocked:hover {
+  transform: translateY(-2px);
+  border-color: var(--node-color);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.topic-node.unlocked:hover::before { opacity: 1; }
+.topic-node.done {
+  background: var(--done-bg);
+  border-color: var(--done-border);
+}
+.topic-node.done::before { opacity: 1; background: var(--green); }
+.topic-node.locked {
+  cursor: not-allowed; opacity: .4; filter: grayscale(.5);
+}
+
+.node-id {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px;
+}
+.node-label { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.4; }
+.node-status { font-size: 16px; position: absolute; top: 12px; right: 12px; }
+
+.topic-node.done .node-label { color: var(--green); }
+.topic-node.locked .node-label { color: var(--muted); }
+
+/* pulse on first unlocked */
+@keyframes pulse-border {
+  0%,100% { box-shadow: 0 0 0 0 rgba(63,185,80,.4); }
+  50% { box-shadow: 0 0 0 6px rgba(63,185,80,0); }
+}
+.topic-node.next-up {
+  border-color: var(--green);
+  animation: pulse-border 2s infinite;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: #0e1419;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 100%; max-width: 700px;
+  max-height: 88vh;
+  display: flex; flex-direction: column;
+  transform: translateY(24px) scale(.97);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 12px;
+  flex-shrink: 0;
+}
+.modal-id {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 5px; padding: 3px 8px;
+  margin-top: 2px; flex-shrink: 0;
+}
+.modal-title { font-size: 18px; font-weight: 900; color: var(--text); flex: 1; }
+.modal-close {
+  background: none; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; padding: 2px 6px;
+  border-radius: 6px; transition: all .15s; flex-shrink: 0;
+}
+.modal-close:hover { background: var(--border); color: var(--text); }
+
+/* tabs inside modal */
+.modal-tabs {
+  display: flex; gap: 2px; padding: 12px 24px 0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.modal-tabs::-webkit-scrollbar { display: none; }
+.m-tab {
+  padding: 7px 16px; font-size: 12px; font-weight: 700;
+  border-radius: 8px 8px 0 0; border: 1px solid transparent;
+  cursor: pointer; background: none; color: var(--muted);
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all .15s;
+  border-bottom: none;
+}
+.m-tab.active {
+  background: var(--card); color: var(--green);
+  border-color: var(--border); border-bottom-color: var(--card);
+}
+
+.modal-body {
+  flex: 1; overflow-y: auto; padding: 20px 24px 24px;
+}
+
+/* concept panel */
+.concept-section { margin-bottom: 20px; }
+.concept-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; color: var(--muted);
+  margin-bottom: 8px;
+}
+.concept-text { font-size: 14px; line-height: 1.8; color: var(--text); }
+.code-block {
+  background: #060a0e; border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+  font-family: 'Space Mono', monospace; font-size: 12px;
+  line-height: 1.8; color: var(--text); overflow-x: auto;
+  white-space: pre; margin: 10px 0;
+}
+.c-kw { color: #ff7b72; }
+.c-fn { color: #d2a8ff; }
+.c-str { color: #a5d6ff; }
+.c-num { color: #f2cc60; }
+.c-cm { color: #545d68; font-style: italic; }
+.c-cls { color: #ffa657; }
+.key-point {
+  background: rgba(63,185,80,.07); border-left: 3px solid var(--green);
+  border-radius: 0 8px 8px 0; padding: 12px 14px;
+  font-size: 13px; color: #9ecf9e; line-height: 1.7; margin: 12px 0;
+}
+
+/* quiz panel */
+.quiz-score {
+  display: flex; gap: 16px; margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--surface); border-radius: 10px; border: 1px solid var(--border);
+}
+.qs-item { text-align: center; }
+.qs-val { font-family: 'Space Mono', monospace; font-size: 20px; font-weight: 700; }
+.qs-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.qs-pct { color: var(--green); }
+.qs-ok { color: var(--green); }
+.qs-ng { color: var(--orange); }
+
+.quiz-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; margin-bottom: 12px;
+}
+.quiz-item.q-correct { border-color: rgba(63,185,80,.4); background: rgba(63,185,80,.05); }
+.quiz-item.q-wrong { border-color: rgba(247,129,102,.4); background: rgba(247,129,102,.05); }
+
+.q-prompt { font-size: 13px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
+.q-code { /* inline code in quiz */ font-family: 'Space Mono', monospace; }
+
+.blank-inp {
+  display: inline-block;
+  background: rgba(88,166,255,.1); border: 1.5px solid var(--blue);
+  border-radius: 5px; padding: 2px 8px;
+  font-family: 'Space Mono', monospace; font-size: 12px; color: var(--blue);
+  outline: none; vertical-align: middle;
+  transition: all .2s;
+}
+.blank-inp:focus { background: rgba(88,166,255,.18); box-shadow: 0 0 0 2px rgba(88,166,255,.2); }
+.blank-inp.ok { background: rgba(63,185,80,.15); border-color: var(--green); color: var(--green); }
+.blank-inp.ng { background: rgba(247,129,102,.15); border-color: var(--orange); color: var(--orange); }
+
+.q-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn {
+  padding: 7px 16px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif; font-size: 12px;
+  cursor: pointer; transition: all .15s; font-weight: 600;
+}
+.btn:hover { border-color: var(--green); color: var(--green); }
+.btn-primary { background: var(--green); color: #080c10; border-color: var(--green); }
+.btn-primary:hover { background: #56d364; color: #080c10; }
+
+.answer-box {
+  display: none; margin-top: 10px;
+  background: #060a0e; border-left: 3px solid var(--green);
+  border-radius: 0 8px 8px 0; padding: 10px 12px;
+  font-size: 12px;
+}
+.answer-box.show { display: block; }
+.ans-label { font-size: 9px; color: var(--green); letter-spacing: 2px; font-family:'Space Mono',monospace; margin-bottom:4px; }
+.ans-val { font-family: 'Space Mono', monospace; color: var(--green); font-size: 12px; }
+.ans-exp { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.6; }
+
+/* unlock banner */
+.unlock-banner {
+  display: none;
+  background: linear-gradient(135deg, rgba(63,185,80,.15), rgba(63,185,80,.05));
+  border: 1px solid rgba(63,185,80,.4); border-radius: 12px;
+  padding: 16px 20px; margin-bottom: 16px;
+  text-align: center;
+}
+.unlock-banner.show { display: block; }
+.unlock-banner h3 { font-size: 16px; color: var(--green); margin-bottom: 6px; }
+.unlock-banner p { font-size: 12px; color: var(--muted); }
+
+/* pass threshold */
+.threshold-note {
+  font-size: 11px; color: var(--muted); text-align: center;
+  margin-top: 8px; padding: 8px;
+  border: 1px dashed var(--border); border-radius: 8px;
+}
+
+/* modal footer */
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; gap: 12px;
+}
+.completion-status { font-size: 12px; color: var(--muted); }
+.completion-status.done { color: var(--green); font-weight: 700; }
+
+/* scrollbar */
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: #1c2128; border: 1px solid var(--border);
+  color: var(--text); font-size: 13px; padding: 10px 18px;
+  border-radius: 10px; z-index: 9999;
+  transition: transform .3s; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* page fade */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.section-block { animation: fadeUp .4s both; }
+.section-block:nth-child(1){animation-delay:.05s}
+.section-block:nth-child(2){animation-delay:.1s}
+.section-block:nth-child(3){animation-delay:.15s}
+.section-block:nth-child(4){animation-delay:.2s}
+.section-block:nth-child(5){animation-delay:.25s}
+
+@media(max-width:600px){
+  .node-grid{grid-template-columns:repeat(2,1fr)}
+  .modal-footer{flex-direction:column;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="index.html" class="back-btn" onclick="fadeOut(event, 'index.html')">← 로드맵</a>
+  <span class="topbar-title">🐍 Python</span>
+  <div class="topbar-right">
+    <span class="top-progress-text"><span id="topDone">0</span>/28 완료</span>
+    <div class="top-bar-track"><div class="top-bar-fill" id="topFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="page" id="page"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-id" id="mId"></div>
+      <div class="modal-title" id="mTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="m-tab active" id="tab-concept" onclick="switchMTab('concept')">📖 개념</button>
+      <button class="m-tab" id="tab-flash" onclick="switchMTab('flash')">🃏 플래시카드</button>
+      <button class="m-tab" id="tab-quiz" onclick="switchMTab('quiz')">✏️ 빈칸퀴즈</button>
+      <button class="m-tab" id="tab-cheat" onclick="switchMTab('cheat')">📋 치트시트</button>
+      <button class="m-tab" id="tab-wrong" onclick="switchMTab('wrong')">📝 오답노트</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-footer">
+      <span class="completion-status" id="mStatus">퀴즈를 풀어 잠금을 해제하세요</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="prevTopic()">← 이전</button>
+        <button class="btn btn-primary" onclick="nextTopic()">다음 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+//  1-01 객체(Object) - Rich Learning Data
+//  모든 HTML 문자열은 일반 따옴표 문자열 사용 (백틱 중첩 방지)
+// ============================================================
+var D101 = {};
+
+D101.concept = [
+  '<div style="margin-bottom:16px">',
+  '<div style="font-size:13px;line-height:2;color:var(--text)">',
+  '\uD83C\uDF0D \uC2E4 \uC138\uACC4\uC758 \uBAA8\uB4E0 \uAC1C\uB150\uC744 \uCEF4\uD4E8\uD130\uC5D0 \uBC18\uC601\uD558\uC5EC \uC800\uC7A5\uD55C \uAC83\uC744 ',
+  '<strong style="color:#58a6ff">\uAC1D\uCCB4(Object)</strong>\uB77C\uACE0 \uD569\uB2C8\uB2E4.<br>',
+  'Python\uC5D0\uC11C\uB294 <em>\uC22B\uC790, \uBB38\uC790\uC5F4, \uD568\uC218, \uBAA8\uB4C8</em> \uB4F1 \uBAA8\uB4E0 \uAC83\uC774 \uAC1D\uCCB4\uC785\uB2C8\uB2E4!',
+  '</div></div>',
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">',
+  '<div style="background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.3);border-radius:10px;padding:14px">',
+  '<div style="font-size:10px;color:#58a6ff;letter-spacing:2px;margin-bottom:8px;font-family:Space Mono,monospace">TYPE (class)</div>',
+  '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">\uC124\uACC4\uB3C4 \u00B7 \uD2C0 \u00B7 \uACF5\uC7A5</div>',
+  '<div style="font-family:Space Mono,monospace;font-size:11px;line-height:2;color:#58a6ff">',
+  'int &nbsp; float &nbsp; bool<br>str &nbsp; list &nbsp; tuple<br>set &nbsp; dict<br>function &nbsp; module',
+  '</div></div>',
+  '<div style="background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.3);border-radius:10px;padding:14px">',
+  '<div style="font-size:10px;color:#3fb950;letter-spacing:2px;margin-bottom:8px;font-family:Space Mono,monospace">INSTANCE</div>',
+  '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">\uC2E4\uC81C \uAC12 \u00B7 \uC81C\uD488 \u00B7 \uACB0\uACFC\uBB3C</div>',
+  '<div style="font-family:Space Mono,monospace;font-size:11px;line-height:2;color:#3fb950">',
+  '10 &nbsp; 3.14 &nbsp; True<br>\'python\' &nbsp; [1,2,3]<br>(1,2) &nbsp; {1,2}<br>{\'a\':1}',
+  '</div></div></div>',
+  '<div style="background:rgba(227,179,65,.07);border-left:3px solid #e3b341;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#e3b341;line-height:1.8">',
+  '\uD83C\uDFED \uBE44\uC720: <strong>int</strong>\uB294 &quot;\uC815\uC218 \uACF5\uC7A5(\uC124\uACC4\uB3C4)&quot;, <strong>10</strong>\uC740 \uADF8 \uACF5\uC7A5\uC5D0\uC11C \uB9CC\uB4E4\uC5B4\uC9C4 &quot;\uC81C\uD488&quot;\uC785\uB2C8\uB2E4.<br>',
+  '\uACF5\uC7A5(class)\uC740 \uD558\uB098\uC9C0\uB9CC, \uC81C\uD488(instance)\uC740 10, 42, -7 \uCC98\uB7FC \uBB34\uC218\uD788 \uB9CE\uC744 \uC218 \uC788\uC5B4\uC694!',
+  '</div>'
+].join('');
+
+D101.code = [
+  '<span class="c-cm"># [1] class(=type) \uC640 instance \uCD9C\uB825</span>\n',
+  '<span class="c-fn">print</span>(<span class="c-cls">int</span>, <span class="c-num">10</span>)\n',
+  '<span class="c-cm"># &lt;class \'int\'&gt;  10</span>\n\n',
+  '<span class="c-cm"># [2] \uC5F0\uC0B0\uC790 \u00B7 \uD568\uC218 \u00B7 .(\uC811\uADFC \uC5F0\uC0B0\uC790) \uC138 \uAC00\uC9C0 \uBC29\uBC95</span>\n',
+  '<span class="c-num">10</span> + <span class="c-num">20</span>           <span class="c-cm"># \uC5F0\uC0B0\uC790  -&gt; 30</span>\n',
+  '<span class="c-fn">abs</span>(-<span class="c-num">10</span>)          <span class="c-cm"># \uD568\uC218    -&gt; 10</span>\n',
+  '(-<span class="c-num">10</span>).__abs__()   <span class="c-cm"># . \uC811\uADFC  -&gt; 10</span>\n',
+  '(<span class="c-num">10</span>).__add__(<span class="c-num">20</span>) <span class="c-cm"># . \uC811\uADFC  -&gt; 30</span>\n\n',
+  '<span class="c-cm"># [3] \uAC1D\uCCB4 \uC815\uBCF4 \uD655\uC778 4\uCD1D\uC0AC</span>\n',
+  '<span class="c-fn">print</span>(<span class="c-fn">type</span>(<span class="c-num">10</span>),   <span class="c-cm"># &lt;class \'int\'&gt;  \uD0C0\uC785 \uD655\uC778</span>\n',
+  '      <span class="c-fn">id</span>(<span class="c-cls">int</span>),    <span class="c-cm"># int \uD074\uB798\uC2A4\uC758 \uBA54\uBAA8\uB9AC \uC8FC\uC18C</span>\n',
+  '      <span class="c-fn">id</span>(<span class="c-num">10</span>),     <span class="c-cm"># 10 \uC778\uC2A4\uD134\uC2A4\uC758 \uBA54\uBAA8\uB9AC \uC8FC\uC18C</span>\n',
+  '      <span class="c-fn">dir</span>(<span class="c-num">10</span>),    <span class="c-cm"># 10\uC774 \uC4F8 \uC218 \uC788\uB294 \uAE30\uB2A5 \uBAA9\uB85D</span>\n',
+  "      sep='\\n')"
+].join('');
+
+D101.keypoint = '\uAC1D\uCCB4 = class(type, \uC124\uACC4\uB3C4) + instance(\uC2E4\uC81C \uAC12). 4\uCD1D\uC0AC: type() \uD0C0\uC785\uD655\uC778 | id() \uC8FC\uC18C\uD655\uC778 | dir() \uAE30\uB2A5\uBAA9\uB85D | print() \uCD9C\uB825';
+
+D101.flashcards = [
+  {
+    front: '\uD83C\uDFF7\uFE0F type(10) \uC758 \uACB0\uACFC\uB294?',
+    back: '<span style="font-family:Space Mono,monospace;font-size:20px;color:#58a6ff">&lt;class \'int\'&gt;</span><br><br><span style="font-size:12px;color:var(--muted)">10\uC740 int \uD074\uB798\uC2A4\uC758 \uC778\uC2A4\uD134\uC2A4\uC784\uC744 \uC54C\uB824\uC90D\uB2C8\uB2E4.<br>type()\uC740 \uAC1D\uCCB4\uAC00 \uC5B4\uB5A4 \uD074\uB798\uC2A4\uB85C \uB9CC\uB4E4\uC5B4\uC84C\uB294\uC9C0 \uBCF4\uC5EC\uC90D\uB2C8\uB2E4.</span>',
+    category: 'type()'
+  },
+  {
+    front: '\uD83D\uDCCD id(10) \uC740 \uBB34\uC5C7\uC744 \uBC18\uD658\uD558\uB098\uC694?',
+    back: '<span style="font-family:Space Mono,monospace;font-size:18px;color:#3fb950">\uBA54\uBAA8\uB9AC \uC8FC\uC18C (\uC815\uC218)</span><br><br><span style="font-size:12px;color:var(--muted)">\uAC19\uC740 \uAC12\uC774\uB77C\uB3C4 \uC2E4\uD589 \uD658\uACBD\uB9C8\uB2E4 id \uAC12\uC774 \uB2E4\uB985\uB2C8\uB2E4.<br>\uD30C\uC774\uC36C\uC740 \uC791\uC740 \uC815\uC218(-5~256)\uB97C \uCE90\uC2F1\uD558\uBBC0\uB85C<br>id(10) == id(10) \uC740 True\uC77C \uAC00\uB2A5\uC131\uC774 \uB192\uC2B5\uB2C8\uB2E4.</span>',
+    category: 'id()'
+  },
+  {
+    front: '\uD83D\uDCCB dir(10) \uC740 \uBB34\uC5C7\uC744 \uBCF4\uC5EC\uC8FC\uB098\uC694?',
+    back: '<span style="font-family:Space Mono,monospace;font-size:18px;color:#d2a8ff">\uAE30\uB2A5(\uBA54\uC11C\uB4DC) \uBAA9\uB85D \uB9AC\uC2A4\uD2B8</span><br><br><span style="font-size:12px;color:var(--muted)">__abs__, __add__, __mul__ \uB4F1<br>\uC815\uC218 \uAC1D\uCCB4\uAC00 \uC0AC\uC6A9\uD560 \uC218 \uC788\uB294 \uBAA8\uB4E0 \uAE30\uB2A5\uC758 \uC774\uB984\uC744<br>\uB9AC\uC2A4\uD2B8\uB85C \uBC18\uD658\uD569\uB2C8\uB2E4. \uD0D0\uC0C9\uC6A9\uC73C\uB85C \uB9E4\uC6B0 \uC720\uC6A9!</span>',
+    category: 'dir()'
+  },
+  {
+    front: '\uD83D\uDDA8\uFE0F print(int, 10) \uC758 \uCD9C\uB825 \uACB0\uACFC\uB294?',
+    back: '<span style="font-family:Space Mono,monospace;font-size:18px;color:#e3b341">&lt;class \'int\'&gt;  10</span><br><br><span style="font-size:12px;color:var(--muted)">int\uB294 \uD074\uB798\uC2A4(\uD0C0\uC785) \uC790\uCCB4\uC774\uBBC0\uB85C &lt;class \'int\'&gt; \uB85C \uCD9C\uB825\uB418\uACE0,<br>10\uC740 \uADF8 \uD074\uB798\uC2A4\uC758 \uC778\uC2A4\uD134\uC2A4\uC774\uBBC0\uB85C \uAC12 10 \uC774 \uCD9C\uB825\uB429\uB2C8\uB2E4.</span>',
+    category: 'print()'
+  },
+  {
+    front: '\u2753 class \uC640 instance \uC758 \uCC28\uC774\uB294?',
+    back: [
+      '<div style="text-align:left;width:100%">',
+      '<div style="margin-bottom:10px"><span style="font-size:13px;color:#58a6ff;font-weight:700">class (type)</span> : \uC124\uACC4\uB3C4 \u00B7 \uACF5\uC7A5 \u00B7 \uD2C0<br>',
+      '<span style="font-family:Space Mono,monospace;font-size:11px;color:#58a6ff">&nbsp;&nbsp;\uC608) int, str, list, float</span></div>',
+      '<div><span style="font-size:13px;color:#3fb950;font-weight:700">instance</span> : \uC2E4\uC81C \uAC12 \u00B7 \uC81C\uD488<br>',
+      '<span style="font-family:Space Mono,monospace;font-size:11px;color:#3fb950">&nbsp;&nbsp;\uC608) 10, \'hello\', [1,2,3], 3.14</span></div>',
+      '<div style="margin-top:10px;font-size:11px;color:var(--muted)">\uD83D\uDCA1 int = \uC815\uC218 \uACF5\uC7A5 / 10 = \uADF8 \uACF5\uC7A5\uC774 \uB9CC\uB4E0 \uC81C\uD488</div>',
+      '</div>'
+    ].join(''),
+    category: '\uAC1C\uB150'
+  },
+  {
+    front: '\u2699\uFE0F (-10)\uC758 \uC808\uB367\uAC12\uC744<br>. \uC811\uADFC \uC5F0\uC0B0\uC790\uB85C \uAD6C\uD558\uB294 \uCF54\uB4DC\uB294?',
+    back: '<span style="font-family:Space Mono,monospace;font-size:18px;color:#f78166">(-10).__abs__()</span><br><br><span style="font-size:12px;color:var(--muted)">\uACB0\uACFC: 10<br>. \uC811\uADFC \uC5F0\uC0B0\uC790\uB85C \uAC1D\uCCB4\uC758 \uBA54\uC11C\uB4DC\uB97C \uC9C1\uC811 \uD638\uCD9C\uD569\uB2C8\uB2E4.<br>abs(-10) \uACFC \uACB0\uACFC\uAC00 \uAC19\uC2B5\uB2C8\uB2E4.<br>__abs__ \uCC98\uB7FC __ \uB85C \uAC10\uC2FC \uAC83 = \uB358\uB354(dunder) \uBA54\uC11C\uB4DC</span>',
+    category: '.\uC811\uADFC'
+  },
+  {
+    front: '\uD83D\uDD22 10 + 20 \uC744<br>. \uC811\uADFC \uC5F0\uC0B0\uC790\uB85C \uD45C\uD604\uD558\uBA74?',
+    back: '<span style="font-family:Space Mono,monospace;font-size:18px;color:#f78166">(10).__add__(20)</span><br><br><span style="font-size:12px;color:var(--muted)">\uACB0\uACFC: 30<br>+ \uC5F0\uC0B0\uC790 \uB0B4\uBD80\uC5D0\uC11C __add__ \uBA54\uC11C\uB4DC\uAC00 \uD638\uCD9C\uB429\uB2C8\uB2E4.<br>\uC5F0\uC0B0\uC790, \uD568\uC218, . \uC811\uADFC - \uC138 \uBC29\uBC95 \uBAA8\uB450 \uAC19\uC740 \uACB0\uACFC!</span>',
+    category: '.\uC811\uADFC'
+  },
+  {
+    front: '\uD83E\uDDF0 \uAC1D\uCCB4 \uC815\uBCF4 \uD655\uC778 4\uCD1D\uC0AC\uB97C \uC21C\uC11C\uB300\uB85C!',
+    back: [
+      '<div style="font-family:Space Mono,monospace;font-size:13px;line-height:2.5;text-align:left;width:100%">',
+      '<span style="color:#e3b341">print()</span> &rarr; \uAC12 \uCD9C\uB825<br>',
+      '<span style="color:#58a6ff">type()</span>&nbsp; &rarr; \uD0C0\uC785(\uD074\uB798\uC2A4) \uD655\uC778<br>',
+      '<span style="color:#3fb950">id()</span>&nbsp;&nbsp;&nbsp; &rarr; \uBA54\uBAA8\uB9AC \uC8FC\uC18C \uD655\uC778<br>',
+      '<span style="color:#d2a8ff">dir()</span>&nbsp;&nbsp; &rarr; \uC0AC\uC6A9 \uAC00\uB2A5\uD55C \uAE30\uB2A5 \uBAA9\uB85D',
+      '</div>'
+    ].join(''),
+    category: '4\uCD1D\uC0AC'
+  }
+];
+
+D101.cheatsheet = [
+  {func:'type(obj)',       ret:'&lt;class \uD0C0\uC785\uBA85&gt;', desc:'\uAC1D\uCCB4\uC758 \uD0C0\uC785(\uD074\uB798\uC2A4)\uC744 \uBC18\uD658', ex:"type(10) &rarr; &lt;class 'int'&gt;",  color:'#58a6ff'},
+  {func:'id(obj)',         ret:'int (\uC8FC\uC18C)',   desc:'\uAC1D\uCCB4\uC758 \uBA54\uBAA8\uB9AC \uC8FC\uC18C \uBC18\uD658',  ex:'id(10) &rarr; 140234... (\uC815\uC218)',  color:'#3fb950'},
+  {func:'dir(obj)',        ret:'list',           desc:'\uAC1D\uCCB4\uAC00 \uAC00\uC9C4 \uAE30\uB2A5(\uBA54\uC11C\uB4DC) \uBAA9\uB85D', ex:"dir(10) &rarr; ['__abs__', ...]",    color:'#d2a8ff'},
+  {func:'print()',         ret:'None',           desc:'\uAC12\uC744 \uD654\uBA74\uC5D0 \uCD9C\uB825 (sep \uC635\uC158 \uAC00\uB2A5)', ex:"print(1,2,sep='\\n')",               color:'#e3b341'},
+  {func:'int',             ret:'class',          desc:'\uC815\uC218 \uD0C0\uC785 \uD074\uB798\uC2A4 (\uC124\uACC4\uB3C4)',     ex:'int &rarr; &lt;class int&gt;',            color:'#f78166'},
+  {func:'10',              ret:'instance',       desc:'int \uD074\uB798\uC2A4\uC758 \uC778\uC2A4\uD134\uC2A4 (\uC2E4\uC81C \uAC12)',  ex:'type(10) &rarr; int',                color:'#39c5cf'},
+  {func:'obj.__method__()',ret:'\uB2E4\uC591',           desc:'. \uC811\uADFC \uC5F0\uC0B0\uC790\uB85C \uBA54\uC11C\uB4DC \uD638\uCD9C', ex:'(-10).__abs__() &rarr; 10',         color:'#ffa657'}
+];
+
+D101.quizzes = [
+  {
+    prompt:'\uD83D\uDD0D \uC815\uC218 10\uC758 \uD0C0\uC785\uC744 \uCD9C\uB825\uD558\uC138\uC694.',
+    template:[
+      {t:'code',v:'print('},
+      {t:'blank',a:'type',h:'type',s:5},
+      {t:'code',v:"(10))\n# \uCD9C\uB825: <class 'int'>"}
+    ],
+    explain:"type() \uD568\uC218\uB294 \uAC1D\uCCB4\uC758 \uD074\uB798\uC2A4\uB97C \uBC18\uD658\uD569\uB2C8\uB2E4. \uC815\uC218 10\uC758 \uD0C0\uC785\uC740 int\uC774\uBBC0\uB85C &lt;class 'int'&gt; \uAC00 \uCD9C\uB825\uB429\uB2C8\uB2E4."
+  },
+  {
+    prompt:'\uD83D\uDCCD \uC815\uC218 10\uC758 \uBA54\uBAA8\uB9AC \uC8FC\uC18C\uB97C \uCD9C\uB825\uD558\uC138\uC694.',
+    template:[
+      {t:'code',v:'print('},
+      {t:'blank',a:'id',h:'id',s:3},
+      {t:'code',v:'(10))\n# \uCD9C\uB825: 140234... (\uC22B\uC790)'}
+    ],
+    explain:'id() \uD568\uC218\uB294 \uAC1D\uCCB4\uC758 \uBA54\uBAA8\uB9AC \uC8FC\uC18C\uB97C \uC815\uC218\uB85C \uBC18\uD658\uD569\uB2C8\uB2E4. \uC2E4\uD589 \uD658\uACBD\uB9C8\uB2E4 \uAC12\uC774 \uB2E4\uB985\uB2C8\uB2E4.'
+  },
+  {
+    prompt:'\uD83D\uDCCB \uC815\uC218 10\uC774 \uC0AC\uC6A9\uD560 \uC218 \uC788\uB294 \uAE30\uB2A5 \uBAA9\uB85D\uC744 \uD655\uC778\uD558\uC138\uC694.',
+    template:[
+      {t:'code',v:'print('},
+      {t:'blank',a:'dir',h:'dir',s:4},
+      {t:'code',v:"(10))\n# \uCD9C\uB825: ['__abs__', '__add__', ...]"}
+    ],
+    explain:"dir() \uD568\uC218\uB294 \uAC1D\uCCB4\uAC00 \uAC00\uC9C4 \uBAA8\uB4E0 \uC18D\uC131\uACFC \uBA54\uC11C\uB4DC \uC774\uB984\uC744 \uB9AC\uC2A4\uD2B8\uB85C \uBC18\uD658\uD569\uB2C8\uB2E4."
+  },
+  {
+    prompt:'\uD83D\uDDA8\uFE0F int(\uD074\uB798\uC2A4)\uC640 10(\uC778\uC2A4\uD134\uC2A4)\uB97C \uD55C \uBC88\uC5D0 \uCD9C\uB825\uD558\uC138\uC694.',
+    template:[
+      {t:'blank',a:'print',h:'print',s:6},
+      {t:'code',v:"(int, 10)\n# \uCD9C\uB825: <class 'int'>  10"}
+    ],
+    explain:"print(int, 10) \uC740 int \uD074\uB798\uC2A4 \uC790\uCCB4\uC640 \uC778\uC2A4\uD134\uC2A4 10\uC744 \uACF5\uBC31\uC73C\uB85C \uAD6C\uBD84\uD574 \uCD9C\uB825\uD569\uB2C8\uB2E4."
+  },
+  {
+    prompt:'\u2699\uFE0F -10\uC758 \uC808\uB367\uAC12\uC744 . \uC811\uADFC \uC5F0\uC0B0\uC790\uB85C \uAD6C\uD558\uC138\uC694. (\uACB0\uACFC: 10)',
+    template:[
+      {t:'code',v:'(-10).'},
+      {t:'blank',a:'__abs__',h:'abs dunder',s:9},
+      {t:'code',v:'()\n# \uACB0\uACFC: 10'}
+    ],
+    explain:'\uAC1D\uCCB4\uC758 . \uBDE4\uC5D0 \uBA54\uC11C\uB4DC \uC774\uB984\uC744 \uC4F0\uBA74 \uD574\uB2F9 \uAE30\uB2A5\uC744 \uC2E4\uD589\uD569\uB2C8\uB2E4. abs(-10) \uACFC \uAC19\uC740 \uACB0\uACFC\uC785\uB2C8\uB2E4. __abs__ \uCC98\uB7FC __ \uB85C \uAC10\uC2FC \uAC83\uC744 \uB358\uB354(dunder) \uBA54\uC11C\uB4DC\uB77C \uD569\uB2C8\uB2E4.'
+  },
+  {
+    prompt:'\uD83D\uDD22 10 + 20 \uC744 . \uC811\uADFC \uC5F0\uC0B0\uC790\uB85C \uD45C\uD604\uD558\uC138\uC694. (\uACB0\uACFC: 30)',
+    template:[
+      {t:'code',v:'(10).'},
+      {t:'blank',a:'__add__',h:'add dunder',s:9},
+      {t:'code',v:'(20)\n# \uACB0\uACFC: 30'}
+    ],
+    explain:'+ \uC5F0\uC0B0\uC790\uB294 \uB0B4\uBD80\uC801\uC73C\uB85C __add__ \uBA54\uC11C\uB4DC\uB97C \uD638\uCD9C\uD569\uB2C8\uB2E4. \uC5F0\uC0B0\uC790, \uD568\uC218, . \uC811\uADFC - \uC138 \uBC29\uBC95 \uBAA8\uB450 \uAC19\uC740 \uACB0\uACFC!'
+  },
+  {
+    prompt:'\uD83D\uDCCA type(), id(), dir()\uB97C sep=\\n\uC73C\uB85C \uD55C\uBC88\uC5D0 \uCD9C\uB825\uD558\uC138\uC694.',
+    template:[
+      {t:'code',v:"print(type(10), id(int), dir(10), sep="},
+      {t:'blank',a:"'\\n'",h:'sep val',s:5},
+      {t:'code',v:')'}
+    ],
+    explain:"sep='\\n' \uC635\uC158\uC740 print()\uC758 \uC778\uC790\uB4E4\uC744 \uC904\uBC14\uAFC8\uC73C\uB85C \uAD6C\uBD84\uD574 \uCD9C\uB825\uD569\uB2C8\uB2E4. \uAE30\uBCF8\uAC12\uC740 \uACF5\uBC31(' ')\uC785\uB2C8\uB2E4."
+  }
+];
+
+</script>
+
+<script>
+// ============================================================
+//  SECTIONS DATA  (1-01은 D101 참조, 나머지는 간단 문자열)
+// ============================================================
+const SECTIONS = [
+  {
+    num:'Section 1', title:'Python Basic', color:'#3fb950',
+    topics:[
+      {
+        id:'1-01', label:'\uAC1D\uCCB4(Object)',
+        concept: D101.concept,
+        code: D101.code,
+        keypoint: D101.keypoint,
+        flashcards: D101.flashcards,
+        cheatsheet: D101.cheatsheet,
+        quizzes: D101.quizzes
+      },
+      {
+        id:'1-02', label:'\ucf54\ub4dc \uc785\ub825 \uBC0F \uc2e4\ud589',
+        concept:'Python \ucf54\ub4dc\ub294 <strong>\uc778\ud130\ud504\ub9ac\ud130</strong> \uBC29\uc2dd\uc73c\ub85c \ud55c \uc904\uc529 \uc2e4\ud589\ub429\ub2c8\uB2E4. Jupyter Notebook\uc5d0\uc11c\ub294 \uc140(Cell) \ub2e8\uc704\ub85c \uc2e4\ud589\ud558\uba70, <code>Shift+Enter</code>\ub85c \uc2e4\ud589\ud569\ub2c8\ub2E4.',
+        code:'<span class="c-fn">print</span>(<span class="c-str">"Hello, Python!"</span>)\n\n<span class="c-cm"># \uc5ec\ub7ec \uc904 - \ub4e4\uc5ec\uc4f0\uae30(4\uce78)\uac00 \ube14\ub85d\uc744 \uad6c\ubd84</span>\n<span class="c-kw">if</span> <span class="c-kw">True</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"\ub4e4\uc5ec\uc4f0\uae30\ub85c \ube14\ub85d \uad6c\ubd84"</span>)',
+        keypoint:'Python\uc740 \ub4e4\uc5ec\uc4f0\uae30(indentation)\ub85c \ucf54\ub4dc \ube14\ub85d\uc744 \uad6c\ubd84\ud569\ub2c8\ub2E4. \ubcf4\ud1b5 4\uce78 \uc2a4\ud398\uc774\uc2a4\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'\ud654\uba74\uc5d0 "Hello, Python!"\uc744 \ucd9c\ub825\ud558\ub294 \ucf54\ub4dc\ub97c \uc644\uc131\ud558\uc138\uc694.',
+           template:[{t:'blank',a:'print',h:'print',s:6},{t:'code',v:'("Hello, Python!")'}],
+           explain:'print() \ud568\uc218\ub294 \uacb0\uacfb\uc548\uc758 \uac12\uc744 \ud654\uba74\uc5d0 \ucd9c\ub825\ud569\ub2c8\ub2E4.'},
+          {prompt:'Python\uc5d0\uc11c \ucf54\ub4dc \ube14\ub85d\uc744 \uad6c\ubd84\ud558\ub294 \uBC29\uBC95\uc744 \uc601\uc5b4\ub85c \uc4f0\uc138\uc694.',
+           template:[{t:'blank',a:'indentation',h:'keyword',s:12}],
+           explain:'Python\uc740 indentation(\ub4e4\uc5ec\uc4f0\uae30)\uc73c\ub85c \ucf54\ub4dc \ube14\ub85d\uc744 \uad6c\ubd84\ud569\ub2c8\ub2E4. \ubcf4\ud1b5 4\uce78 \uc2a4\ud398\uc774\uc2a4\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-03', label:'\uc774\ub984(\ubcc0\uc218), \ud0c0\uc785(type)',
+        concept:'\ubcc0\uc218\ub294 \uac1d\uccb4\ub97c \uac00\ub9ac\ud0a4\ub294 <strong>\uc774\ub984\ud45c</strong>\uc785\ub2c8\ub2E4. Python\uc740 \ub3d9\uc801 \ud0c0\uc785 \uc5b8\uc5b4\ub85c, \ubcc0\uc218 \uc120\uc5b8 \uc2dc \ud0c0\uc785\uc744 \uba85\uc2dc\ud558\uc9c0 \uc54a\uc544\ub3c4 \ub429\ub2c8\ub2e4. \uae30\ubcf8 \ud0c0\uc785: <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>',
+        code:'x = <span class="c-num">10</span>          <span class="c-cm"># int</span>\ny = <span class="c-num">3.14</span>        <span class="c-cm"># float</span>\nname = <span class="c-str">"Python"</span>  <span class="c-cm"># str</span>\nflag = <span class="c-kw">True</span>     <span class="c-cm"># bool</span>\n\n<span class="c-fn">print</span>(<span class="c-fn">type</span>(x))    <span class="c-cm"># &lt;class \'int\'&gt;</span>\n<span class="c-fn">print</span>(<span class="c-fn">type</span>(name))  <span class="c-cm"># &lt;class \'str\'&gt;</span>',
+        keypoint:'\ubcc0\uc218\uba85\uc740 \uc22b\uc790\ub85c \uc2dc\uc791\ud560 \uc218 \uc5c6\uace0, \uc608\uc57d\uc5b4(if, for \ub4f1)\ub294 \uc0ac\uc6a9 \ubd88\uac00\ud569\ub2c8\ub2E4. \ub300\uc18c\ubb38\uc790\ub97c \uad6c\ubd84\ud569\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'\ubcc0\uc218 x\uc5d0 \uc815\uc218 42\ub97c \ud560\ub2f9\ud558\uace0 \ud0c0\uc785\uc744 \ucd9c\ub825\ud558\ub294 \ucf54\ub4dc\uc785\ub2c8\ub2E4.',
+           template:[{t:'code',v:'x = '},{t:'blank',a:'42',h:'value',s:4},{t:'code',v:'\nprint(type(x))'}],
+           explain:'int\ub294 \uc815\uc218\ud615 \ud0c0\uc785\uc785\ub2c8\ub2E4. type()\uc73c\ub85c \ud655\uc778\ud558\uba74 &lt;class int&gt;\uac00 \ucd9c\ub825\ub429\ub2c8\ub2E4.'},
+          {prompt:'True \ub610\ub294 False \uac12\uc744 \uac00\uc9c0\ub294 \ud0c0\uc785\uc740?',
+           template:[{t:'blank',a:'bool',h:'type',s:5}],
+           explain:'bool \ud0c0\uc785\uc740 True/False \ub450 \uac00\uc9c0 \uac12\ub9cc \uac00\uc9d1\ub2c8\ub2E4. Python\uc5d0\uc11c\ub294 \ub300\ubb38\uc790\ub85c \uc2dc\uc791\ud569\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-04', label:'\uc11c\uc2dd\uc788\ub294 \uBB38\uc790\uc5f4',
+        concept:'\uBB38\uc790\uc5f4 \uc548\uc5d0 \ubcc0\uc218\ub97c \uc0bd\uc785\ud558\ub294 \uBC29\uBC95\uc785\ub2c8\ub2E4. \ud604\ub300 Python\uc5d0\uc11c\ub294 <strong>f-string</strong>\uc744 \uac00\uc7a5 \ub9ce\uc774 \uc0ac\uc6a9\ud569\ub2c8\ub2E4.',
+        code:'name = <span class="c-str">"Alice"</span>\nage = <span class="c-num">25</span>\n\n<span class="c-cm"># f-string (Python 3.6+, \uad8c\uc7a5)</span>\n<span class="c-fn">print</span>(<span class="c-str">f"\uc774\ub984: {name}, \ub098\uc774: {age}"</span>)\n\n<span class="c-cm"># .format() \uBC29\uc2dd</span>\n<span class="c-fn">print</span>(<span class="c-str">"\uc774\ub984: {}, \ub098\uc774: {}"</span>.<span class="c-fn">format</span>(name, age))',
+        keypoint:"f-string\uc740 f'' \ub610\ub294 f\"\" \ub85c \uc2dc\uc791\ud558\uba70, \uc911\uad04\ud638 {} \uc548\uc5d0 \ubcc0\uc218\ub098 \ud45c\ud604\uc2dd\uc744 \ubc14\ub85c \ub123\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2E4.",
+        quizzes:[
+          {prompt:"name = 'Bob' \uc77c \ub54c, f-string\uc73c\ub85c '\uc548\ub155, Bob!'\uc744 \ucd9c\ub825\ud558\uc138\uc694.",
+           template:[{t:'code',v:'print('},{t:'blank',a:'f"안녕, {name}!"',h:'f-string',s:17},{t:'code',v:')'}],
+           explain:'f-string\uc740 \uBB38\uc790\uc5f4 \uc55e\uc5d0 f\ub97c \uBD99\uc774\uACE0, {} \uc548\uc5d0 \ubcc0\uc218\ub97c \uc9c1\uc811 \ub123\uc2b5\ub2c8\ub2E4.'},
+          {prompt:'pi = 3.14159 \uc77c \ub54c \uc18c\uc218\uc810 2\uc790\ub9ac\ub85c \ucd9c\ub825: "3.14"',
+           template:[{t:'code',v:'print(f"'},{t:'blank',a:'{pi:.2f}',h:'format',s:9},{t:'code',v:'")'}],
+           explain:'{변수:.2f}\ub294 \uc18c\uc218\uc810 2\uc790\ub9ac\uae4c\uc9c0 \ucd9c\ub825\ud569\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-05', label:'\uc5f0\uc0b0\uc790',
+        concept:'Python\uc758 \uc8fc\uc694 \uc5f0\uc0b0\uc790: \uc0b0\uc220(+,-,*,/,//,%,**), \ube44\uad50(==,!=,&gt;,&lt;,&gt;=,&lt;=), \ub17c\ub9ac(and,or,not), \ud560\ub2f9(=,+=,-=)',
+        code:'<span class="c-fn">print</span>(<span class="c-num">10</span> // <span class="c-num">3</span>)   <span class="c-cm"># 3  (\uc815\uc218 \ub098\ub217\uc148)</span>\n<span class="c-fn">print</span>(<span class="c-num">10</span> % <span class="c-num">3</span>)    <span class="c-cm"># 1  (\ub098\uba38\uc9c0)</span>\n<span class="c-fn">print</span>(<span class="c-num">2</span> ** <span class="c-num">10</span>)   <span class="c-cm"># 1024 (\uac70\ub4ed\uc81c\uACF1)</span>\n\n<span class="c-fn">print</span>(<span class="c-kw">True</span> <span class="c-kw">and</span> <span class="c-kw">False</span>)  <span class="c-cm"># False</span>\n<span class="c-fn">print</span>(<span class="c-kw">not</span> <span class="c-kw">True</span>)         <span class="c-cm"># False</span>',
+        keypoint:'// \ub294 \uc815\uc218 \ub098\ub217\uc148(\uba71), % \ub294 \ub098\uba38\uc9c0, ** \ub294 \uac70\ub4ed\uc81c\uACF1\uc785\ub2c8\ub2E4. / \ub294 \ud56d\uc0c1 float\ub97c \ub098\ud0c0\ub0c5\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'10\uc744 3\uc73c\ub85c \ub098\ub188 \ub098\uba38\uc9c0\ub97c \uad6c\ud558\uc138\uc694.',
+           template:[{t:'code',v:'print(10 '},{t:'blank',a:'%',h:'op',s:2},{t:'code',v:' 3)'}],
+           explain:'% \uc5f0\uc0b0\uc790\ub294 \ub098\uba38\uc9c0\ub97c \ub098\ud0c0\ub0c5\ub2c8\ub2E4. 10 % 3 = 1\uc785\ub2c8\ub2E4.'},
+          {prompt:'2\uc758 8\uc81c\uACF1\uc744 \uacc4\uc0b0\ud558\uc138\uc694.',
+           template:[{t:'code',v:'print(2 '},{t:'blank',a:'**',h:'op',s:3},{t:'code',v:' 8)'}],
+           explain:'** \uc5f0\uc0b0\uc790\ub294 \uac70\ub4ed\uc81c\uACF1\uc785\ub2c8\ub2E4. 2**8 = 256\uc785\ub2c8\ub2E4.'},
+          {prompt:'7\uc744 2\ub85c \ub098\ub178 \uba71(\uc815\uc218)\uc744 \uad6c\ud558\uc138\uc694.',
+           template:[{t:'code',v:'print(7 '},{t:'blank',a:'//',h:'op',s:3},{t:'code',v:' 2)'}],
+           explain:'// \uc5f0\uc0b0\uc790\ub294 \uc815\uc218 \ub098\ub217\uc148(floor division)\uc73c\ub85c \uba71\uc744 \ub098\ud0c0\ub0c5\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-06', label:'\uc870\uAC74 \uc791\uc131 \uc5f0\uc2b5',
+        concept:'<code>if</code>, <code>elif</code>, <code>else</code>\ub85c \uc870\uAC74 \uBD84\uAE30\ub97c \uc791\uc131\ud569\ub2c8\ub2E4. \uc870\uAC74\uc2dd\uc758 \uACB0\uACFC\uAC00 <strong>True</strong>\uc774\uba74 \ud574\ub2f9 \ube14\ub85d\uc774 \uc2e4\ud589\ub429\ub2c8\ub2E4.',
+        code:'score = <span class="c-num">85</span>\n\n<span class="c-kw">if</span> score >= <span class="c-num">90</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"A"</span>)\n<span class="c-kw">elif</span> score >= <span class="c-num">80</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"B"</span>)   <span class="c-cm"># \uc774\uAC8C \uCD9C\uB825\ub428</span>\n<span class="c-kw">else</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"F"</span>)',
+        keypoint:'elif\ub294 else if\uc758 \uCD95\uc57d\uc785\ub2c8\ub2E4. \uc870\uAC74\uc740 \uc704\uc5d0\uc11c\ubd80\ud130 \uc21c\uc11c\ub300\ub85c \uAC80\uc0ac\ud558\uba70, \uCC98\uc74c\uc73c\ub85c True\uc778 \ube14\ub85d\ub9cc \uc2e4\ud589\ub429\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'x = 15\uc77c \ub54c, x\uAC00 10\ubcf4\ub2e4 \ud06c\uba74 "big"\uc744 \ucd9c\ub825\ud558\ub294 \ucf54\ub4dc\uc785\ub2c8\ub2E4.',
+           template:[{t:'blank',a:'if',h:'keyword',s:3},{t:'code',v:' x > 10:\n    print("big")'}],
+           explain:'if \ud0a4\uc6cc\ub4dc\ub85c \uc870\uAC74\uBB38\uc744 \uc2dc\uc791\ud569\ub2c8\ub2E4.'},
+          {prompt:'if \uc870\uAC71\uc774 False\uc77c \ub54c, \ub2e4\ub978 \uc870\uAC71\uc744 \ucd94\uAC00\ud558\ub294 \ud0a4\uc6cc\ub4dc\ub294?',
+           template:[{t:'blank',a:'elif',h:'keyword',s:5}],
+           explain:'elif\ub294 else if\uc758 \uCD95\uc57d\uc73c\ub85c, \uc55e\uc758 if \uc870\uAC71\uc774 False\uc77c \ub54c \uCD94\uAC00 \uc870\uAC71\uc744 \uAC80\uc0AC\ud569\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-07', label:'input \ud568\uc218',
+        concept:'<code>input()</code>\uc740 \uc0ac\uc6a9\uc790\ub85c\ubd80\ud130 \ud0a4\ubcf4\ub4dc \uc785\ub825\uc744 \uBC1B\uc2b5\ub2c8\ub2E4. \ub098\ud0c0\ub0c4\uac12\uc740 \ud56d\uc0c1 <strong>\uBB38\uc790\uc5f4(str)</strong>\uc774\uBBC0\ub85c, \uc22b\uc790\ub85c \uc4f0\ub824\uba74 \ud615\ubcc0\ud658\uc774 \ud544\uc694\ud569\ub2c8\ub2E4.',
+        code:'name = <span class="c-fn">input</span>(<span class="c-str">"\uc774\ub984\uc744 \uc785\ub825\ud558\uc138\uc694: "</span>)\n<span class="c-fn">print</span>(<span class="c-str">f"\uc548\ub155, {name}!"</span>)\n\n<span class="c-cm"># \uc22b\uc790 \uc785\ub825 - \ud615\ubcc0\ud658 \ud544\uc218!</span>\nage = <span class="c-fn">int</span>(<span class="c-fn">input</span>(<span class="c-str">"\ub098\uc774: "</span>))\n<span class="c-fn">print</span>(<span class="c-str">f"10\ub144 \ud6c4: {age + 10}\uc138"</span>)',
+        keypoint:'input()\uc758 \ub098\ud0c4\uac12\uc740 \ud56d\uc0c1 str\uc785\ub2c8\ub2E4. \uc22b\uc790 \uacc4\uc0b0\uc744 \ud558\ub824\uba74 int() \ub610\ub294 float()\ub85c \ubcc0\ud658\ud574\uc57c \ud569\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'\uc0ac\uc6a9\uc790 \uc785\ub825\uc744 \uc815\uc218\ub85c \uBC1B\uc544 n\uc5d0 \uc800\uc7a5\ud558\ub294 \ucf54\ub4dc\uc785\ub2c8\ub2E4.',
+           template:[{t:'code',v:'n = '},{t:'blank',a:'int',h:'convert',s:4},{t:'code',v:'(input("\uc22b\uc790 \uc785\ub825: "))'}],
+           explain:'input()\uc740 \ud56d\uc0c1 str\uc744 \ub098\ud0c4\ud558\ubbc0\ub85c, int()\ub85c \uAC10\uc2f8\uc11c \uc815\uc218\ub85c \ubcc0\ud658\ud569\ub2c8\ub2E4.'},
+          {prompt:'input() \ud568\uc218\uc758 \ub098\ud0c4 \ud0c0\uc785\uc740?',
+           template:[{t:'blank',a:'str',h:'type',s:4}],
+           explain:'input()\uc740 \uc0ac\uc6a9\uc790\uAC00 \uc785\ub825\ud55c \ub0b4\uc6a9\uc744 \ud56d\uc0c1 \uBB38\uc790\uc5f4(str)\ub85c \ub098\ud0c4\ud569\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-08', label:'\ud615\ubcc0\ud658',
+        concept:'\ub370\uc774\ud130 \ud0c0\uc785\uc744 \ubcc0\ud658\ud558\ub294 \ud568\uc218: <code>int()</code>, <code>float()</code>, <code>str()</code>, <code>bool()</code>, <code>list()</code>, <code>tuple()</code>',
+        code:'<span class="c-fn">int</span>(<span class="c-str">"42"</span>)      <span class="c-cm"># 42</span>\n<span class="c-fn">float</span>(<span class="c-str">"3.14"</span>)  <span class="c-cm"># 3.14</span>\n<span class="c-fn">str</span>(<span class="c-num">100</span>)       <span class="c-cm"># "100"</span>\n<span class="c-fn">bool</span>(<span class="c-num">0</span>)        <span class="c-cm"># False (0, "", [], None -&gt; False)</span>\n<span class="c-fn">bool</span>(<span class="c-num">42</span>)       <span class="c-cm"># True</span>',
+        keypoint:'0, \ube48 \uBB38\uc790\uc5f4 "", \ube48 \ub9ac\uc2a4\ud2b8 [], None\uc740 \ubaa8\ub450 bool\ub85c \ubcc0\ud658 \uc2dc False\uc785\ub2c8\ub2E4. \ub098\uba38\uc9c0\ub294 True\uc785\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'"3.14" \uBB38\uc790\uc5f4\uc744 \uc18c\uc218\uc810 \uc22b\uc790\ub85c \ubcc0\ud658\ud558\uc138\uc694.',
+           template:[{t:'blank',a:'float',h:'convert',s:6},{t:'code',v:'("3.14")'}],
+           explain:'float()\ub294 \uBB38\uc790\uc5f4\uc774\ub098 \uc815\uc218\ub97c \uc18c\uc218\uc810 \uc22b\uc790\ub85c \ubcc0\ud658\ud569\ub2c8\ub2E4.'},
+          {prompt:'bool(0)\uc758 \uACB0\uACFC\ub294?',
+           template:[{t:'blank',a:'False',h:'result',s:6}],
+           explain:'0, "", [], {}, None\uc740 bool \ubcc0\ud658 \uc2dc False\uc785\ub2c8\ub2E4. \ub098\uba38\uc9c0\ub294 \ubaa8\ub450 True\uc785\ub2c8\ub2E4.'}
+        ]
+      },
+      {
+        id:'1-09', label:'\ud568\uc218(function)',
+        concept:'<code>def</code> \ud0a4\uc6cc\ub4dc\ub85c \ud568\uc218\ub97c \uc815\uc758\ud569\ub2c8\ub2E4. \ud568\uc218\ub294 \ucf54\ub4dc\ub97c \uc7ac\uc0ac\uc6a9\ud558\uace0 \uad6c\uc870\ud654\ud558\ub294 \uAE30\ubcf8 \ub2e8\uc704\uc785\ub2c8\ub2E4.',
+        code:'<span class="c-kw">def</span> <span class="c-fn">greet</span>(name):\n    <span class="c-kw">return</span> <span class="c-str">f"\uc548\ub155, {name}!"</span>\n\nresult = <span class="c-fn">greet</span>(<span class="c-str">"Python"</span>)\n<span class="c-fn">print</span>(result)\n\n<span class="c-cm"># \uAE30\ubcf8\uAC12 \uc778\uc790</span>\n<span class="c-kw">def</span> <span class="c-fn">power</span>(base, exp=<span class="c-num">2</span>):\n    <span class="c-kw">return</span> base ** exp\n\n<span class="c-fn">print</span>(<span class="c-fn">power</span>(<span class="c-num">3</span>))    <span class="c-cm"># 9</span>',
+        keypoint:'def\ub85c \ud568\uc218\ub97c \uc815\uc758\ud558\uace0, return\uc73c\ub85c \uAC12\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4. return\uc774 \uc5c6\uc73c\uba74 None\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.',
+        quizzes:[
+          {prompt:'\ud568\uc218\ub97c \uc815\uc758\ud558\ub294 Python \ud0a4\uc6cc\ub4dc\ub294?',
+           template:[{t:'blank',a:'def',h:'keyword',s:4},{t:'code',v:' my_func():'}],
+           explain:'def(define\uc758 \uCD95\uc57d) \ud0a4\uc6cc\ub4dc\ub85c \ud568\uc218\ub97c \uc815\uc758\ud569\ub2c8\ub2E4.'},
+          {prompt:'\ud568\uc218\uc5d0\uc11c \uAC12\uc744 \ub098\ud0c4\ud558\ub294 \ud0a4\uc6cc\ub4dc\ub294?',
+           template:[{t:'code',v:'def add(a,b):\n    '},{t:'blank',a:'return',h:'keyword',s:7},{t:'code',v:' a + b'}],
+           explain:'return \ud0a4\uc6cc\ub4dc\ub85c \ud568\uc218\uc758 \uACB0\uACFC\uAC12\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.'}
+        ]
+      }
+    ]
+  },
+  {
+    num:'Section 2', title:'Containers', color:'#58a6ff',
+    topics:[
+      {id:'2-00',label:'range',concept:'<code>range()</code>\ub294 \uc815\uc218 \uc218\uc5f4\uc744 \uc0dd\uc131\ud558\ub294 \ub0b4\uc7a5 \ud568\uc218\uc785\ub2c8\ub2E4.',code:'<span class="c-fn">range</span>(<span class="c-num">5</span>)           <span class="c-cm"># 0,1,2,3,4</span>\n<span class="c-fn">range</span>(<span class="c-num">1</span>, <span class="c-num">6</span>)      <span class="c-cm"># 1,2,3,4,5</span>\n<span class="c-fn">range</span>(<span class="c-num">0</span>, <span class="c-num">10</span>, <span class="c-num">2</span>)  <span class="c-cm"># 0,2,4,6,8</span>\n<span class="c-fn">list</span>(<span class="c-fn">range</span>(<span class="c-num">5</span>))  <span class="c-cm"># [0,1,2,3,4]</span>',keypoint:'range(start, stop, step): stop\uc740 \ud3ec\ud568\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2E4.',quizzes:[{prompt:'1\ubd80\ud130 10\uae4c\uc9c0 2\uc529 \uc99d\uac00\ud558\ub294 range\ub97c \ub9cc\ub4dc\uc138\uc694.',template:[{t:'blank',a:'range',h:'fn',s:6},{t:'code',v:'(1, 11, 2)'}],explain:'range(1, 11, 2)\ub294 1,3,5,7,9\ub97c \uc0dd\uc131\ud569\ub2c8\ub2E4.'},{prompt:'range(5)\ub97c \ub9ac\uc2a4\ud2b8\ub85c \ubcc0\ud658\ud558\ub294 \ud568\uc218\ub294?',template:[{t:'blank',a:'list',h:'fn',s:5},{t:'code',v:'(range(5))'}],explain:'list(range(5))\ub294 [0, 1, 2, 3, 4]\ub97c \uc0dd\uc131\ud569\ub2c8\ub2E4.'}]},
+      {id:'2-01',label:'Sequence Index',concept:'\uc2dc\ucfc0\uc2a4 \ud0c0\uc785\uc740 \uc778\ub371\uc2a4\ub85c \uc694\uc18c\uc5d0 \uc811\uADFC\ud569\ub2c8\ub2E4. \uc74c\uc218 \uc778\ub371\uc2a4\ub294 \ub4a4\uc5d0\uc11c\ubd80\ud130 \uc14d\ub2c8\ub2E4.',code:"lst = ['a','b','c','d','e']\nlst[<span class='c-num'>0</span>]    <span class='c-cm'># 'a'</span>\nlst[-<span class='c-num'>1</span>]   <span class='c-cm'># 'e'</span>\nlst[<span class='c-num'>1</span>:<span class='c-num'>3</span>]  <span class='c-cm'># ['b','c']</span>\nlst[::-<span class='c-num'>1</span>] <span class='c-cm'># \uc5ed\uc21c</span>",keypoint:'\uc2ac\ub77c\uc774\uc2f1: [start:stop:step]. stop\uc740 \ud3ec\ud568\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2E4.',quizzes:[{prompt:"lst=['a','b','c','d'] \uc5d0\uc11c \ub9c8\uc9c0\ub9c9 \uc694\uc18c\ub97c \uac00\uc838\uc624\uc138\uc694.",template:[{t:'code',v:'lst['},{t:'blank',a:'-1',h:'index',s:3},{t:'code',v:']'}],explain:'\uc778\ub371\uc2a4 -1\uc740 \ub9c8\uc9c0\ub9c9 \uc694\uc18c\uc785\ub2c8\ub2E4.'},{prompt:"lst=[0,1,2,3,4,5] \uc5d0\uc11c lst[1:4]\uc758 \uACB0\uACFC\ub294?",template:[{t:'blank',a:'[1, 2, 3]',h:'result',s:10}],explain:'\uc2ac\ub77c\uc774\uc2f1 [1:4]\ub294 \uc778\ub371\uc2a4 1,2,3\uc758 \uc694\uc18c\ub97c \ub098\ud0c4\ud569\ub2c8\ub2E4.'}]},
+      {id:'2-02',label:'Sequence \uc5f0\uc0b0',concept:'\uc2dc\ucfc0\uc2a4 \ud0c0\uc785\uc740 <strong>+</strong>(\uc5f0\uACB0), <strong>*</strong>(\uBC18\ubcf5), <strong>in</strong>(\ud3ec\ud568 \uc5ec\uBD80), <strong>len()</strong>(\uAE38\uc774) \ub4f1\uc758 \uc5f0\uc0b0\uc744 \uc9c0\uc6d0\ud569\ub2c8\ub2E4.',code:'a = [<span class="c-num">1</span>, <span class="c-num">2</span>]; b = [<span class="c-num">3</span>, <span class="c-num">4</span>]\na + b   <span class="c-cm"># [1,2,3,4]</span>\na * <span class="c-num">3</span>   <span class="c-cm"># [1,2,1,2,1,2]</span>\n<span class="c-num">2</span> <span class="c-kw">in</span> a  <span class="c-cm"># True</span>\n<span class="c-fn">len</span>(a)  <span class="c-cm"># 2</span>',keypoint:'in \uc5f0\uc0b0\uc790\ub85c \uc694\uc18c \ud3ec\ud568 \uc5ec\uBD80\ub97c \ud655\uc778\ud569\ub2c8\ub2E4.',quizzes:[{prompt:'[1,2] + [3,4]\uc758 \uACB0\uACFC\ub294? (\ub9ac\uc2a4\ud2b8 \ud615\ud0dc\ub85c)',template:[{t:'blank',a:'[1, 2, 3, 4]',h:'result',s:13}],explain:'+ \uc5f0\uc0b0\uc790\ub294 \ub450 \uc2dc\ucfc0\uc2a4\ub97c \uc5f0\uACB0\ud569\ub2c8\ub2E4.'},{prompt:'"hello" \uc5d0 "ell"\uc774 \ud3ec\ud568\ub418\ub294\uc9c0 \ud655\uc778\ud558\uc138\uc694.',template:[{t:'code',v:'print("ell" '},{t:'blank',a:'in',h:'op',s:3},{t:'code',v:' "hello")'}],explain:'in \uc5f0\uc0b0\uc790\ub85c \uc2dc\ucfc0\uc2a4 \uc548\uc5d0 \uc694\uc18c\uAC00 \ud3ec\ud568\ub418\ub294\uc9c0 \ud655\uc778\ud569\ub2c8\ub2E4.'}]},
+      {id:'2-03',label:'tuple',concept:'<strong>\ud29c\ud50c(tuple)</strong>\uc740 \ubcc0\uacbd \uBD88\uAC00\ub2a5\ud55c(immutable) \uc2dc\ucfc0\uc2a4\uc785\ub2c8\ub2E4. \uc18c\uAD04\ud638 <code>()</code>\ub85c \uc0dd\uc131\ud569\ub2c8\ub2E4.',code:'t = (<span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">3</span>)\nt = (<span class="c-num">1</span>,)        <span class="c-cm"># \uc694\uc18c 1\uAC1C - \uc27C\ud45c \ud544\uc218!</span>\na, b, c = t  <span class="c-cm"># \uc5B8\ud301\ud0b9</span>',keypoint:'\uc694\uc18c\uAC00 1\uAC1C\uc778 \ud29c\ud50c\uc740 \uBC18\ub4dc\uc2dc \ub4A4\uc5d0 \uc27C\ud45c\ub97c \uBD99\uc5ec\uc57c \ud569\ub2c8\ub2E4: (1,).',quizzes:[{prompt:'\ud29c\ud50c\uc744 \uc0dd\uc131\ud558\ub294 \uAD04\ud638\ub294?',template:[{t:'blank',a:'()',h:'bracket',s:3}],explain:'\ud29c\ud50c\uc740 \uc18c\uAD04\ud638 ()\ub85c \uc0dd\uc131\ud569\ub2c8\ub2E4.'},{prompt:'\uc694\uc18c\uAC00 \ud558\ub098\uc778 \ud29c\ud50c: t = (5   )  \ube48\uce78\uc5d0 \ub4e4\uc5b4\uAC08 \uAC83\uc740?',template:[{t:'blank',a:',',h:'symbol',s:2}],explain:"(5,)\uCC98\ub7fc \uBC18\ub4dc\uc2dc \uc27C\ud45c\ub97c \uBD99\uc5ec\uc57c \ud569\ub2c8\ub2E4. (5)\ub294 \uc815\uc218 5\uc640 \uAC19\uc2b5\ub2c8\ub2E4."}]},
+      {id:'2-04',label:'list',concept:'<strong>\ub9ac\uc2a4\ud2b8(list)</strong>\ub294 \ubcc0\uacbd \uAC00\ub2a5\ud55c(mutable) \uc2dc\ucfc0\uc2a4\uc785\ub2c8\ub2E4. \ub300\uAD04\ud638 <code>[]</code>\ub85c \uc0dd\uc131\ud569\ub2c8\ub2E4.',code:"lst = [<span class='c-num'>1</span>, <span class='c-str'>'hello'</span>, <span class='c-num'>3.14</span>]  <span class='c-cm'># \ud63c\ud569 \ud0c0\uc785</span>\nlst[<span class='c-num'>0</span>] = <span class='c-num'>99</span>   <span class='c-cm'># \ubcc0\uacbd \uAC00\ub2a5!</span>\n<span class='c-fn'>list</span>(<span class='c-str'>'abc'</span>)     <span class='c-cm'># ['a','b','c']</span>",keypoint:'\ub9ac\uc2a4\ud2b8\ub294 mutable(\ubcc0\uacbd \uAC00\ub2a5)\ud558\uACE0, \ud29c\ud50c\uc740 immutable(\ubcc0\uacbd \uBD88\uAC00)\ud569\ub2c8\ub2E4.',quizzes:[{prompt:'\ub9ac\uc2a4\ud2b8\ub97c \uc0dd\uc131\ud558\ub294 \uAD04\ud638\ub294?',template:[{t:'blank',a:'[]',h:'bracket',s:3}],explain:'\ub9ac\uc2a4\ud2b8\ub294 \ub300\uAD04\ud638 []\ub85c \uc0dd\uc131\ud569\ub2c8\ub2E4.'},{prompt:"'abc' \uBB38\uc790\uc5f4\uc744 \ub9ac\uc2a4\ud2b8\ub85c \ubcc0\ud658\ud558\uba74?",template:[{t:'blank',a:'list',h:'fn',s:5},{t:'code',v:"('abc')"}],explain:"list('abc')\ub294 ['a', 'b', 'c']\ub97c \ub098\ud0c4\ud569\ub2c8\ub2E4."}]},
+      {id:'2-05',label:'list \uba54\uc11c\ub4dc',concept:'\ub9ac\uc2a4\ud2b8\uc758 \uc8fc\uc694 \uba54\uc11c\ub4dc: <code>append()</code>, <code>insert()</code>, <code>remove()</code>, <code>pop()</code>, <code>sort()</code>, <code>count()</code>',code:"lst = [<span class='c-num'>3</span>,<span class='c-num'>1</span>,<span class='c-num'>4</span>]\nlst.<span class='c-fn'>append</span>(<span class='c-num'>9</span>)    <span class='c-cm'># [3,1,4,9]</span>\nlst.<span class='c-fn'>sort</span>()      <span class='c-cm'># [1,3,4,9]</span>\nlst.<span class='c-fn'>pop</span>()       <span class='c-cm'># 9 \uc81c\uac70 \uBC18\ud658</span>\nlst.<span class='c-fn'>count</span>(<span class='c-num'>1</span>)   <span class='c-cm'># 1\uc758 \uac1c\uc218</span>",keypoint:'append()\ub294 \ub05d\uc5d0 \ucd94\uac00, pop()\uc740 \ub9c8\uc9c0\ub9c9 \uc81c\uac70 \uBC18\ud658\uc785\ub2c8\ub2E4.',quizzes:[{prompt:'lst=[1,2,3] \uc5d0 \ub05d\uc5d0 4\ub97c \ucd94\uac00\ud558\uc138\uc694.',template:[{t:'code',v:'lst.'},{t:'blank',a:'append',h:'method',s:7},{t:'code',v:'(4)'}],explain:'append()\ub294 \ub9ac\uc2a4\ud2b8\uc758 \ub05d\uc5d0 \uc694\uc18c\ub97c \ucd94\uac00\ud569\ub2c8\ub2E4.'},{prompt:'lst=[3,1,4] \ub97c \uc624\ub984\uCC28\uc21c\uc73c\ub85c \uc815\ub82c\ud558\uc138\uc694.',template:[{t:'code',v:'lst.'},{t:'blank',a:'sort',h:'method',s:5},{t:'code',v:'()'}],explain:'sort()\ub294 \uc6d0\ubcf8 \ub9ac\uc2a4\ud2b8\ub97c \uc624\ub984\uCC28\uc21c\uc73c\ub85c \uc815\ub82c\ud569\ub2c8\ub2E4.'}]},
+      {id:'2-06',label:'str \uba54\uc11c\ub4dc',concept:'\uBB38\uc790\uc5f4\uc758 \uc8fc\uc694 \uba54\uc11c\ub4dc: <code>upper()</code>, <code>strip()</code>, <code>split()</code>, <code>join()</code>, <code>replace()</code>',code:"s = <span class='c-str'>'  Hello  '</span>\ns.<span class='c-fn'>upper</span>()          <span class='c-cm'># '  HELLO  '</span>\ns.<span class='c-fn'>strip</span>()          <span class='c-cm'># 'Hello'</span>\ns.<span class='c-fn'>split</span>(<span class='c-str'>','</span>)     <span class='c-cm'># \uc27c\ud45c\ub85c \uBD84\ud560</span>\n<span class='c-str'>'-'</span>.<span class='c-fn'>join</span>([<span class='c-str'>'a'</span>,<span class='c-str'>'b'</span>])  <span class='c-cm'># 'a-b'</span>",keypoint:'split()\uc740 \uBB38\uc790\uc5f4 \u2192 \ub9ac\uc2a4\ud2b8, join()\uc740 \ub9ac\uc2a4\ud2b8 \u2192 \uBB38\uc790\uc5f4\ub85c \ubcc0\ud658\ud569\ub2c8\ub2E4.',quizzes:[{prompt:'"  hello  " \uc591\ucabd \uACF5\uBC31\uc744 \uc81c\uac70\ud558\uc138\uc694.',template:[{t:'code',v:'s = "  hello  "\ns.'},{t:'blank',a:'strip',h:'method',s:6},{t:'code',v:'()'}],explain:'strip()\uc740 \uc591\ucabd \uACF5\uBC31\uc744 \uc81c\uac70\ud569\ub2c8\ub2E4.'},{prompt:"['x','y','z']\ub97c '-'\ub85c \uc5f0\uACB0\ud558\uc138\uc694.",template:[{t:'code',v:"'-'."},{t:'blank',a:'join',h:'method',s:5},{t:'code',v:"(['x','y','z'])"}],explain:"join()\uc740 \uAD6C\uBD84\uc790.join(\ub9ac\uc2a4\ud2b8) \ud615\ud0dc\ub85c \ub9ac\uc2a4\ud2b8 \uc694\uc18c\ub97c \uc774\uc5b4\uBD99\uc785\ub2c8\ub2E4."}]},
+      {id:'2-07',label:'set',concept:'<strong>set</strong>\uc740 <strong>\uc911\ubcf5 \uc5c6\ub294</strong>, <strong>\uc21c\uc11c \uc5c6\ub294</strong> \uc790\ub8cc\ud615\uc785\ub2c8\ub2E4. \uc9d1\ud569 \uc5f0\uc0b0(\uAD50 &, \ud569 |, \uCC28 -)\uc744 \uc9c0\uc6d0\ud569\ub2c8\ub2E4.',code:"s = {<span class='c-num'>1</span>,<span class='c-num'>2</span>,<span class='c-num'>3</span>,<span class='c-num'>2</span>,<span class='c-num'>1</span>}  <span class='c-cm'># {1,2,3}</span>\na = {<span class='c-num'>1</span>,<span class='c-num'>2</span>,<span class='c-num'>3</span>}; b = {<span class='c-num'>2</span>,<span class='c-num'>3</span>,<span class='c-num'>4</span>}\na & b  <span class='c-cm'># {2,3}  \uAD50\uc9d1\ud569</span>\na | b  <span class='c-cm'># {1,2,3,4} \ud569\uc9d1\ud569</span>\na - b  <span class='c-cm'># {1}  \uCC28\uc9d1\ud569</span>",keypoint:'\ube48 set\uc740 set()\ub85c \ub9CC\ub4e6\ub2c8\ub2E4. {}\ub294 \ube48 \ub515\uc154\ub108\ub9ac\uc785\ub2c8\ub2E4!',quizzes:[{prompt:'[1,2,2,3,3]\uc5d0\uc11c \uc911\ubcf5\uc744 \uc81c\uac70\ud558\ub824\uba74?',template:[{t:'blank',a:'set',h:'fn',s:4},{t:'code',v:'([1,2,2,3,3])'}],explain:'set()\uc73c\ub85c \ubcc0\ud658\ud558\uba74 \uc911\ubcf5\uc774 \uc81c\uac70\ub429\ub2c8\ub2E4.'},{prompt:'\uAD50\uc9d1\ud569 \uc5f0\uc0b0\uc790\ub294?',template:[{t:'blank',a:'&',h:'op',s:2}],explain:'& \ub294 \uAD50\uc9d1\ud569, | \ub294 \ud569\uc9d1\ud569, - \ub294 \uCC28\uc9d1\ud569\uc785\ub2c8\ub2E4.'}]},
+      {id:'2-08',label:'dict \uc0dd\uc131',concept:'<strong>\ub515\uc154\ub108\ub9ac(dict)</strong>\ub294 \ud0a4-\uAC12(key:value) \uc30d\uc73c\ub85c \ub370\uc774\ud130\ub97c \uc800\uc7a5\ud569\ub2c8\ub2E4.',code:"d = {<span class='c-str'>'name'</span>: <span class='c-str'>'Alice'</span>, <span class='c-str'>'age'</span>: <span class='c-num'>25</span>}\nd[<span class='c-str'>'name'</span>]           <span class='c-cm'># 'Alice'</span>\nd.<span class='c-fn'>get</span>(<span class='c-str'>'score'</span>, <span class='c-num'>0</span>)  <span class='c-cm'># 0 (\ud0a4 \uc5c6\uc73c\uba74 \uAE30\ubcf8\uAC12)</span>",keypoint:"d['key']\ub294 \ud0a4\uAC00 \uc5c6\uc73c\uba74 KeyError. d.get('key', \uAE30\ubcf8\uAC12)\uc740 \ud0a4\uAC00 \uc5c6\uc5b4\ub3c4 \uAE30\ubcf8\uAC12\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.",quizzes:[{prompt:"d={'a':1,'b':2} \uc5d0\uc11c 'a' \uAC12\uc744 \uac00\uc838\uc624\uc138\uc694.",template:[{t:'code',v:'d['},{t:'blank',a:"'a'",h:'key',s:4},{t:'code',v:']'}],explain:"\ub515\uc154\ub108\ub9ac\ub294 d[\ud0a4]\ub85c \uAC12\uc5d0 \uc811\uADFC\ud569\ub2c8\ub2E4."},{prompt:'\ud0a4\uAC00 \uc5c6\uc744 \ub54c \uAE30\ubcf8\uAC12 0\uc744 \ub098\ud0c4\ud558\ub294 \uba54\uc11c\ub4dc\ub294?',template:[{t:'code',v:'d.'},{t:'blank',a:'get',h:'method',s:4},{t:'code',v:"('없는키', 0)"}],explain:"get(key, default)\ub294 \ud0a4\uAC00 \uc5c6\uc744 \ub54c \uAE30\ubcf8\uAC12\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4."}]},
+      {id:'2-09',label:'dict \uc5f0\uc0b0',concept:'\ub515\uc154\ub108\ub9ac \uc21c\ud658, \uc5c5\ub370\uc774\ud2b8, \uc0ad\uc81c \uBC29\uBC95\uc744 \ud559\uc2b5\ud569\ub2c8\ub2E4.',code:"d = {<span class='c-str'>'x'</span>:<span class='c-num'>1</span>, <span class='c-str'>'y'</span>:<span class='c-num'>2</span>}\n<span class='c-kw'>for</span> k, v <span class='c-kw'>in</span> d.<span class='c-fn'>items</span>():\n    <span class='c-fn'>print</span>(k, v)\nd.<span class='c-fn'>update</span>({<span class='c-str'>'z'</span>:<span class='c-num'>3</span>})\n<span class='c-kw'>del</span> d[<span class='c-str'>'x'</span>]",keypoint:'items()\ub85c \ud0a4-\uAC12 \uc30d\uc744 \ub3d9\uc2dc\uc5d0 \uc21c\ud658\ud569\ub2c8\ub2E4.',quizzes:[{prompt:'\ub515\uc154\ub108\ub9ac\ub97c \ud0a4-\uAC12 \uc30d\uc73c\ub85c \uc21c\ud658\ud560 \ub54c \uc0ac\uc6a9\ud558\ub294 \uba54\uc11c\ub4dc\ub294?',template:[{t:'code',v:'for k, v in d.'},{t:'blank',a:'items',h:'method',s:6},{t:'code',v:'():'}],explain:'items()\ub294 (key, value) \ud29c\ud50c \uc30d\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.'},{prompt:"\ub515\uc154\ub108\ub9ac\uc5d0\uc11c 'x' \ud0a4\ub97c \uc0ad\uc81c\ud558\ub294 \ud0a4\uc6cc\ub4dc \uBC29\uBC95\uc740?",template:[{t:'blank',a:'del',h:'keyword',s:4},{t:'code',v:" d['x']"}],explain:"del d['key']\ub85c \ud0a4-\uAC12 \uc30d\uc744 \uc0ad\uc81c\ud569\ub2c8\ub2E4."}]},
+      {id:'2-10',label:'Comprehension',concept:'<strong>\ucf64\ud504\ub9ac\ud5e8\uc158</strong>\uc740 \ud55c \uc904\ub85c \ub9ac\uc2a4\ud2b8, \ub515\uc154\ub108\ub9ac, set\uc744 \uc0dd\uc131\ud558\ub294 Python\ub2e4\uc6b4 \uBC29\uBC95\uc785\ub2c8\ub2E4.',code:"squares = [x**<span class='c-num'>2</span> <span class='c-kw'>for</span> x <span class='c-kw'>in</span> <span class='c-fn'>range</span>(<span class='c-num'>5</span>)]  <span class='c-cm'># [0,1,4,9,16]</span>\nevens = [x <span class='c-kw'>for</span> x <span class='c-kw'>in</span> <span class='c-fn'>range</span>(<span class='c-num'>10</span>) <span class='c-kw'>if</span> x%<span class='c-num'>2</span>==<span class='c-num'>0</span>]\nd = {k: k**<span class='c-num'>2</span> <span class='c-kw'>for</span> k <span class='c-kw'>in</span> <span class='c-fn'>range</span>(<span class='c-num'>4</span>)}",keypoint:'\ud615\uc2dd: [\ud45c\ud604\uc2dd for \ubcc0\uc218 in \uc774\ud130\ub7ec\ube14 if \uc870\uAC71]. \uc870\uAC71\uc740 \uc120\ud0dd\uc0ac\ud56d\uc785\ub2c8\ub2E4.',quizzes:[{prompt:'1~5 \uac01\uAC01\uc758 \uc81c\uACF1\uc744 \ub2f4\uc740 \ub9ac\uc2a4\ud2b8\ub97c \ud55c \uc904\ub85c \ub9CC\ub4e6\ub2c8\ub2E4.',template:[{t:'blank',a:'[x**2 for x in range(1,6)]',h:'comprehension',s:27}],explain:'[x**2 for x in range(1,6)]\ub294 [1,4,9,16,25]\ub97c \uc0dd\uc131\ud569\ub2c8\ub2E4.'},{prompt:'0~9 \uc911 \uc9DD\uc218\ub9cc \uACE8\ub77c\ub0b4\ub294 \ucf64\ud504\ub9ac\ud5e8\uc158 \uc870\uAC71\uc740?',template:[{t:'code',v:'[x for x in range(10) '},{t:'blank',a:'if x % 2 == 0',h:'condition',s:15},{t:'code',v:']'}],explain:'if x % 2 == 0 \uc870\uAC71\uc73c\ub85c \uc9DD\uc218\ub9cc \ud544\ud130\ub9c1\ud569\ub2c8\ub2E4.'}]}
+    ]
+  },
+  {
+    num:'Section 3', title:'Function', color:'#d2a8ff',
+    topics:[
+      {id:'3-01',label:'\ud568\uc218\uc758 \ud544\uc694\uc131, \uc6a9\uc5b4, \uc815\uc758',concept:'\ud568\uc218\ub294 <strong>\uBC18\ubcf5\ub418\ub294 \ucf54\ub4dc\ub97c \uc7ac\uc0ac\uc6a9</strong>\ud558\uace0, <strong>\ucf54\ub4dc\ub97c \uad6c\uc870\ud654</strong>\ud558\uae30 \uc704\ud574 \ud544\uc694\ud569\ub2c8\ub2E4.',code:'<span class="c-kw">def</span> <span class="c-fn">add</span>(a, b):     <span class="c-cm"># a, b: \ub9e4\uAC1C\ubcc0\uc218(parameter)</span>\n    result = a + b\n    <span class="c-kw">return</span> result\n\nval = <span class="c-fn">add</span>(<span class="c-num">3</span>, <span class="c-num">5</span>)   <span class="c-cm"># 3, 5: \uc778\uc790(argument)</span>',keypoint:'parameter(\ub9e4\uAC1C\ubcc0\uc218): \ud568\uc218 \uc815\uc758 \uc2dc \uAD04\ud638 \uc548\uc758 \ubcc0\uc218 / argument(\uc778\uc790): \ud568\uc218 \ud638\ucd9c \uc2dc \uc804\ub2ec\ud558\ub294 \uc2e4\uc81c \uAC12',quizzes:[{prompt:'\ud568\uc218 \ud638\ucd9c \uc2dc \uc804\ub2ec\ud558\ub294 \uc2e4\uc81c \uAC12\uc744 \uc6a9\uc5b4\ub85c (\uc601\uc5b4)?',template:[{t:'blank',a:'argument',h:'term',s:9}],explain:'argument(\uc778\uc790)\ub294 \ud568\uc218\ub97c \ud638\ucd9c\ud560 \ub54c \uc804\ub2ec\ud558\ub294 \uc2e4\uc81c \uAC12\uc785\ub2c8\ub2E4.'},{prompt:'\ud568\uc218 \uc815\uc758 \uc2dc \uc0ac\uc6a9\ud558\ub294 \ud0a4\uc6cc\ub4dc\ub294?',template:[{t:'blank',a:'def',h:'keyword',s:4}],explain:'def \ud0a4\uc6cc\ub4dc\ub85c \ud568\uc218\ub97c \uc815\uc758\ud569\ub2c8\ub2E4.'}]},
+      {id:'3-02',label:'\ud568\uc218\uc758 \ud615\ud0dc',concept:'\ud568\uc218\uc758 4\uAC00\uc9c0 \ud615\ud0dc: \uc785\ub825/\ucd9c\ub825 \uc720\ubb34\uc5d0 \ub530\ub77c \uAD6C\uBD84\ud569\ub2c8\ub2E4.',code:'<span class="c-kw">def</span> <span class="c-fn">hello</span>(): <span class="c-fn">print</span>(<span class="c-str">"hi"</span>)  <span class="c-cm"># \uc785\ub825X \ucd9c\ub825X</span>\n<span class="c-kw">def</span> <span class="c-fn">square</span>(x): <span class="c-kw">return</span> x ** <span class="c-num">2</span>  <span class="c-cm"># \uc785\ub825O \ucd9c\ub825O</span>',keypoint:'return\uc774 \uc5c6\uc73c\uba74 None\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4. return a, b\ub85c \uc5ec\ub7ec \uAC12\uc744 \ud29c\ud50c\ub85c \ub098\ud0c4\ud569\ub2c8\ub2E4.',quizzes:[{prompt:'return\uc774 \uc5c6\ub294 \ud568\uc218\uc758 \ub098\ud0c4\uAC12\uc740?',template:[{t:'blank',a:'None',h:'value',s:5}],explain:'return\uBB38\uc774 \uc5c6\uc73c\uba74 None\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.'},{prompt:'\ub450 \uAC12 a, b\ub97c \ub3d9\uc2dc\uc5d0 \ub098\ud0c4\ud558\ub294 \ucf54\ub4dc\ub294?',template:[{t:'code',v:'def multi(a,b):\n    '},{t:'blank',a:'return',h:'keyword',s:7},{t:'code',v:' a, b'}],explain:'return a, b\ub294 (a, b) \ud29c\ud50c\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.'}]},
+      {id:'3-03',label:'argument\uc758 \uc885\ub958',concept:'\uc778\uc790 \uc885\ub958: <strong>\uc704\uce58(positional)</strong>, <strong>\ud0a4\uc6cc\ub4dc(keyword)</strong>, <strong>\uAC00\ubcc0(*args)</strong>, <strong>\ud0a4\uc6cc\ub4dc \uAC00\ubcc0(**kwargs)</strong>',code:'<span class="c-kw">def</span> <span class="c-fn">total</span>(*args):\n    <span class="c-kw">return</span> <span class="c-fn">sum</span>(args)\n\n<span class="c-fn">total</span>(<span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">3</span>, <span class="c-num">4</span>)  <span class="c-cm"># 10</span>',keypoint:'*args\ub294 \uc5ec\ub7ec \uc704\uce58 \uc778\uc790\ub97c \ud29c\ud50c\ub85c \uBC1B\uc2b5\ub2c8\ub2E4. **kwargs\ub294 \ud0a4\uc6cc\ub4dc \uc778\uc790\ub97c \ub515\uc154\ub108\ub9ac\ub85c \uBC1B\uc2b5\ub2c8\ub2E4.',quizzes:[{prompt:'\uc5ec\ub7ec \uc704\uce58 \uc778\uc790\ub97c \ud29c\ud50c\ub85c \uBC1B\ub294 \ub9e4\uAC1C\ubcc0\uc218 \ud615\uc2dd\uc740?',template:[{t:'blank',a:'*args',h:'param',s:6}],explain:'*args\ub294 \uc704\uce58 \uc778\uc790\ub97c \uBA87 \uAC1C\ub4e0 \ud29c\ud50c\ub85c \uBC1B\uc2b5\ub2c8\ub2E4.'},{prompt:'\ud0a4\uc6cc\ub4dc \uc778\uc790\ub97c \ub515\uc154\ub108\ub9ac\ub85c \uBC1B\ub294 \ud615\uc2dd\uc740?',template:[{t:'blank',a:'**kwargs',h:'param',s:8}],explain:'**kwargs\ub294 \ud0a4\uc6cc\ub4dc \uc778\uc790\ub97c \ub515\uc154\ub108\ub9ac\ub85c \uBC1B\uc2b5\ub2c8\ub2E4.'}]},
+      {id:'3-04',label:'parameter\uc758 \uc885\ub958',concept:'\ub9e4\uAC1C\ubcc0\uc218 \uc885\ub958: <strong>\uc77c\uBC18</strong>, <strong>\uAE30\ubcf8\uAC12(default)</strong>, <strong>*args</strong>, <strong>**kwargs</strong>',code:'<span class="c-kw">def</span> <span class="c-fn">connect</span>(host, port=<span class="c-num">8080</span>, **opts):\n    <span class="c-fn">print</span>(host, port, opts)\n\n<span class="c-fn">connect</span>(<span class="c-str">"localhost"</span>)\n<span class="c-cm"># localhost 8080 {}</span>',keypoint:'\uAE30\ubcf8\uAC12 \ub9e4\uAC1C\ubcc0\uc218\ub294 \uc77c\uBC18 \ub9e4\uAC1C\ubcc0\uc218 \ub4A4\uc5d0 \uc704\uce58\ud574\uc57c \ud569\ub2c8\ub2E4.',quizzes:[{prompt:"def func(a, b=10) \uc5d0\uc11c b\uc758 \uc885\ub958\ub294?",template:[{t:'blank',a:'\uAE30\ubcf8\uAC12',h:'type',s:5},{t:'code',v:' \ub9e4\uAC1C\ubcc0\uc218'}],explain:'b=10\uCC98\ub7fc = \uc73c\ub85c \uAE30\ubcf8\uAC12\uc744 \uc9c0\uc815\ud55c \ub9e4\uAC1C\ubcc0\uc218\uc785\ub2c8\ub2E4.'},{prompt:'\ub9e4\uAC1C\ubcc0\uc218 \uc21c\uc11c: \uc77c\uBC18 -> ___ -> *args -> **kwargs',template:[{t:'blank',a:'\uAE30\ubcf8\uAC12',h:'order',s:5}],explain:'\uc62c\uBC14\ub978 \uc21c\uc11c: \uc77c\uBC18 -> \uAE30\ubcf8\uAC12(default) -> *args -> **kwargs'}]},
+      {id:'3-05',label:'lambda \ud568\uc218',concept:'<strong>lambda</strong>\ub294 \uc774\ub984 \uc5c6\ub294 \uc775\uba85 \ud568\uc218\ub97c \ud55c \uc904\ub85c \uc815\uc758\ud569\ub2c8\ub2E4.',code:"square = <span class='c-kw'>lambda</span> x: x ** <span class='c-num'>2</span>\n<span class='c-fn'>print</span>(<span class='c-fn'>square</span>(<span class='c-num'>5</span>))  <span class='c-cm'># 25</span>\n\ndata = [(<span class='c-str'>'b'</span>,<span class='c-num'>2</span>),(<span class='c-str'>'a'</span>,<span class='c-num'>1</span>)]\n<span class='c-fn'>sorted</span>(data, key=<span class='c-kw'>lambda</span> x: x[<span class='c-num'>1</span>])",keypoint:'lambda \ub9e4\uAC1C\ubcc0\uc218: \ud45c\ud604\uc2dd. return \ud0a4\uc6cc\ub4dc \uc5c6\uc774 \ud45c\ud604\uc2dd\uc758 \uACB0\uACFC\uAC00 \uc790\ub3d9\uc73c\ub85c \ub098\ud0c4\ub429\ub2c8\ub2E4.',quizzes:[{prompt:'\ub450 \uc218\ub97c \ub354\ud558\ub294 lambda \ud568\uc218\ub97c \ub9CC\ub4e6\ub2c8\ub2E4.',template:[{t:'code',v:'add = '},{t:'blank',a:'lambda',h:'keyword',s:7},{t:'code',v:' a, b: a + b'}],explain:'lambda \ud0a4\uc6cc\ub4dc\ub85c \uc775\uba85 \ud568\uc218\ub97c \uc815\uc758\ud569\ub2c8\ub2E4.'},{prompt:'[1,2,3,4] \uAC01 \uc694\uc18c\uc5d0 2\ub97c \uACF1\ud558\ub294 map + lambda \ucf54\ub4dc\ub294?',template:[{t:'code',v:'list(map('},{t:'blank',a:'lambda x: x*2',h:'lambda',s:14},{t:'code',v:', [1,2,3,4]))'}],explain:'map(\ud568\uc218, \uc774\ud130\ub7ec\ube14)\uc740 \uAC01 \uc694\uc18c\uc5d0 \ud568\uc218\ub97c \uc801\uc6a9\ud569\ub2c8\ub2E4.'}]}
+    ]
+  },
+  {
+    num:'Section 4', title:'\ubaa8\ub4c8\uc0ac\uc6a9', color:'#e3b341',
+    topics:[
+      {id:'4-01',label:'\ubaa8\ub4c8 import',concept:'<strong>\ubaa8\ub4c8</strong>\uc740 \ud568\uc218, \ubcc0\uc218, \ud074\ub798\uc2a4\uAC00 \ub2f4\uAE34 \ud30c\uc774\uc36c \ud30c\uc77c\uc785\ub2c8\ub2E4. <code>import</code>\ub85c \uBD88\ub7ec\uc640 \uc0ac\uc6a9\ud569\ub2c8\ub2E4.',code:'<span class="c-kw">import</span> math\n<span class="c-fn">print</span>(math.pi)        <span class="c-cm"># 3.14159...</span>\n\n<span class="c-cm"># \ubcc4\uce6d(alias)</span>\n<span class="c-kw">import</span> numpy <span class="c-kw">as</span> np\n<span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd\n\n<span class="c-cm"># \ud2b9\uc815 \uc774\ub984\ub9cc import</span>\n<span class="c-kw">from</span> math <span class="c-kw">import</span> pi, sqrt',keypoint:"import numpy as np \uCC98\ub7fc \ubcc4\uce6d(alias)\uc744 \uBD99\uc5ec \uc0ac\uc6a9\ud558\ub294 \uAC83\uc774 \uAD00\ub840\uc785\ub2c8\ub2E4. np, pd, plt \ub4f1\uc744 \uAE30\uc5b5\ud558\uc138\uc694.",quizzes:[{prompt:'numpy\ub97c np\ub77c\ub294 \uc774\ub984\uc73c\ub85c import\ud558\uc138\uc694.',template:[{t:'blank',a:'import',h:'keyword',s:7},{t:'code',v:' numpy '},{t:'blank',a:'as',h:'keyword',s:3},{t:'code',v:' np'}],explain:'import \ubaa8\ub4c8 as \ubcc4\uce6d \ud615\ud0dc\ub85c \uc9e7\uc740 \uc774\ub984\uc744 \uc9c0\uc815\ud569\ub2c8\ub2E4.'},{prompt:'math \ubaa8\ub4c8\uc5d0\uc11c sqrt \ud568\uc218\ub9cc \uAC00\uc838\uc624\ub294 \ucf54\ub4dc\ub294?',template:[{t:'blank',a:'from',h:'keyword',s:5},{t:'code',v:' math '},{t:'blank',a:'import',h:'keyword',s:7},{t:'code',v:' sqrt'}],explain:'from \ubaa8\ub4c8 import \uc774\ub984 \ud615\ud0dc\ub85c \ud2b9\uc815 \ud568\uc218\ub9cc \uAC00\uc838\uc635\ub2c8\ub2E4.'}]}
+    ]
+  },
+  {
+    num:'Section 5', title:'\uc81c\uc5b4\uBB38', color:'#f78166',
+    topics:[
+      {id:'5-01',label:'if\uBB38',concept:'\uc870\uAC71\uc5d0 \ub530\ub77c \ucf54\ub4dc \uc2e4\ud589 \ud750\ub984\uc744 \uBD84\uAE30\ud569\ub2c8\ub2E4.',code:'x = <span class="c-num">15</span>\n\n<span class="c-kw">if</span> x > <span class="c-num">20</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"big"</span>)\n<span class="c-kw">elif</span> x > <span class="c-num">10</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"medium"</span>)\n<span class="c-kw">else</span>:\n    <span class="c-fn">print</span>(<span class="c-str">"small"</span>)\n\n<span class="c-cm"># \uc0bc\ud56d \uc5f0\uc0b0\uc790</span>\nresult = <span class="c-str">"\uc9DD\uc218"</span> <span class="c-kw">if</span> x % <span class="c-num">2</span> == <span class="c-num">0</span> <span class="c-kw">else</span> <span class="c-str">"\ud640\uc218"</span>',keypoint:'\uc0bc\ud56d \uc5f0\uc0b0\uc790: \uCC38_\uAC12 if \uc870\uAC71 else \uAC70\uc9d3_\uAC12. \ud55c \uc904 \uc870\uAC71\uc2dd\uc785\ub2c8\ub2E4.',quizzes:[{prompt:'x = 7\uc77c \ub54c, \uc9DD\uc218/\ud640\uc218 \ud310\ubcc4 \uc0bc\ud56d\uc2dd \uACB0\uACFC\ub294?',template:[{t:'code',v:'result = "\uc9DD" if x%2==0 else "'},{t:'blank',a:'\ud640',h:'value',s:3},{t:'code',v:'"'}],explain:'x=7\uc740 \ud640\uc218\uc774\ubbc0\ub85c else \uc774\ud6c4\uc758 "\ud640"\uc774 result\uc5d0 \uc800\uc7a5\ub429\ub2c8\ub2E4.'},{prompt:'\uc870\uAC71\uc774 False\uc77c \ub54c \uc2e4\ud589\ub418\ub294 \ube14\ub85d\uc758 \ud0a4\uc6cc\ub4dc\ub294?',template:[{t:'blank',a:'else',h:'keyword',s:5}],explain:'else \ube14\ub85d\uc740 \uc55e\uc758 if/elif \uc870\uAC71\uc774 \ubaa8\ub450 False\uc77c \ub54c \uc2e4\ud589\ub429\ub2c8\ub2E4.'}]},
+      {id:'5-02',label:'for\uBB38',concept:'\uc774\ud130\ub7ec\ube14(iterable)\uc758 \uAC01 \uc694\uc18c\ub97c \uc21c\uc11c\ub300\ub85c \uc21c\ud68c\ud569\ub2c8\ub2E4.',code:'<span class="c-kw">for</span> i <span class="c-kw">in</span> [<span class="c-num">1</span>,<span class="c-num">2</span>,<span class="c-num">3</span>]:\n    <span class="c-fn">print</span>(i)\n\n<span class="c-cm"># enumerate: \uc778\ub371\uc2a4 + \uAC12</span>\n<span class="c-kw">for</span> i, v <span class="c-kw">in</span> <span class="c-fn">enumerate</span>([<span class="c-str">\'a\'</span>,<span class="c-str">\'b\'</span>,<span class="c-str">\'c\'</span>]):\n    <span class="c-fn">print</span>(i, v)',keypoint:'enumerate()\ub294 (\uc778\ub371\uc2a4, \uAC12) \uc30d\uc744 \ub098\ud0c4\ud569\ub2c8\ub2E4.',quizzes:[{prompt:"['a','b','c']\ub97c \uc778\ub371\uc2a4\uc640 \ud568\uAED8 \uc21c\ud68c\ud558\ub294 \ud568\uc218\ub294?",template:[{t:'code',v:'for i, v in '},{t:'blank',a:'enumerate',h:'fn',s:9},{t:'code',v:"(['a','b','c']):"}],explain:'enumerate()\ub294 (0,a), (1,b) \ucc98\ub7fc \uc778\ub371\uc2a4\uc640 \uAC12\uc744 \ud568\uAED8 \ub098\ud0c4\ud569\ub2c8\ub2E4.'},{prompt:'for \ub8e8\ud504\ub97c \uc989\uc2dc \uc885\ub8cc\ud558\ub294 \ud0a4\uc6cc\ub4dc\ub294?',template:[{t:'blank',a:'break',h:'keyword',s:6}],explain:'break\ub294 \uBC18\ubcf5\uBB38\uc744 \uc989\uc2dc \uc885\ub8cc\ud569\ub2c8\ub2E4.'}]},
+      {id:'5-03',label:'while\uBB38',concept:'\uc870\uAC71\uc774 <strong>True\uc778 \ub3d9\uc548</strong> \uacc4\uc18d \uBC18\ubcf5\ud569\ub2c8\ub2E4. \uBC18\ub4dc\uc2dc \uc885\ub8cc \uc870\uAC71\uc774 \uc788\uc5b4\uc57c \uBB34\ud55c\ub8e8\ud504\ub97c \uBC29\uc9c0\ud569\ub2c8\ub2E4.',code:'count = <span class="c-num">0</span>\n<span class="c-kw">while</span> count < <span class="c-num">3</span>:\n    <span class="c-fn">print</span>(count)\n    count += <span class="c-num">1</span>  <span class="c-cm"># 0, 1, 2</span>\n\n<span class="c-cm"># while True + break \ud328\ud134</span>\n<span class="c-kw">while</span> <span class="c-kw">True</span>:\n    ans = <span class="c-fn">input</span>(<span class="c-str">"q \uc785\ub825 \uc2dc \uc885\ub8cc: "</span>)\n    <span class="c-kw">if</span> ans == <span class="c-str">\'q\'</span>: <span class="c-kw">break</span>',keypoint:'while True: ... break \ud328\ud134\uc740 \uc0ac\uc6a9\uc790 \uc785\ub825 \uCC98\ub9ac, \uAC8C\uc784 \ub8e8\ud504 \ub4f1\uc5d0\uc11c \uc790\uc8fc \uc0ac\uc6a9\ub429\ub2c8\ub2E4.',quizzes:[{prompt:'while \ub8e8\ud504\uc758 \uc2dc\uc791 \ud0a4\uc6cc\ub4dc\ub294?',template:[{t:'blank',a:'while',h:'keyword',s:6},{t:'code',v:' \uc870\uAC71:'}],explain:'while \uc870\uAC71: \ud615\ud0dc\ub85c \uc870\uAC71\uc774 True\uc778 \ub3d9\uc548 \uBC18\ubcf5\ud569\ub2c8\ub2E4.'},{prompt:'while True \ub8e8\ud504\uc5d0\uc11c \ud0c8\uCD9C\ud558\ub824\uba74?',template:[{t:'blank',a:'break',h:'keyword',s:6}],explain:'break \ud0a4\uc6cc\ub4dc\ub85c while \ub8e8\ud504\ub97c \uc989\uc2dc \uc885\ub8cc\ud569\ub2c8\ub2E4.'}]}
+    ]
+  }
+];
+
+const ALL_TOPICS = SECTIONS.flatMap(s => s.topics);
+const TOTAL = ALL_TOPICS.length;
+
+// ============================================================
+//  STATE
+// ============================================================
+function getState() {
+  const raw = localStorage.getItem('python_progress');
+  return raw ? JSON.parse(raw) : {};
+}
+function setState(st) {
+  localStorage.setItem('python_progress', JSON.stringify(st));
+  const done = Object.values(st).filter(Boolean).length;
+  localStorage.setItem('progress_python', JSON.stringify({completed:done, total:TOTAL}));
+}
+function isTopicUnlocked(idx) {
+  if (idx === 0) return true;
+  return !!getState()[ALL_TOPICS[idx-1].id];
+}
+function isTopicDone(id) { return !!getState()[id]; }
+
+// ============================================================
+//  RENDER MAP
+// ============================================================
+function renderMap() {
+  const page = document.getElementById('page');
+  page.innerHTML = '';
+  const st = getState();
+  const done = Object.values(st).filter(Boolean).length;
+  document.getElementById('topDone').textContent = done;
+  document.getElementById('topFill').style.width = Math.round(done/TOTAL*100) + '%';
+
+  let gi = 0;
+  SECTIONS.forEach(sec => {
+    const secDone = sec.topics.filter(t => !!st[t.id]).length;
+    const secPct = Math.round(secDone/sec.topics.length*100);
+    const block = document.createElement('div');
+    block.className = 'section-block';
+    block.innerHTML =
+      '<div class="section-header">' +
+        '<span class="section-num">' + sec.num + '</span>' +
+        '<span class="section-title">' + sec.title + '</span>' +
+        '<span class="section-pct">' + secDone + '/' + sec.topics.length + '</span>' +
+      '</div>' +
+      '<div class="section-bar"><div class="section-bar-fill" style="width:' + secPct + '%;background:' + sec.color + '"></div></div>' +
+      '<div class="node-grid" id="grid-' + sec.num.replace(' ','') + '"></div>';
+    page.appendChild(block);
+
+    const grid = block.querySelector('.node-grid');
+    sec.topics.forEach(function(topic) {
+      const idx = gi;
+      const unlocked = isTopicUnlocked(idx);
+      const d = isTopicDone(topic.id);
+      const isNext = unlocked && !d && (idx === 0 || isTopicDone(ALL_TOPICS[idx-1].id));
+      const node = document.createElement('div');
+      node.className = 'topic-node ' + (d ? 'done' : unlocked ? 'unlocked' : 'locked');
+      if (isNext) node.classList.add('next-up');
+      node.style.setProperty('--node-color', sec.color);
+      node.innerHTML =
+        '<div><div class="node-id">' + topic.id + '</div><div class="node-label">' + topic.label + '</div></div>' +
+        '<div class="node-status">' + (d ? '✅' : unlocked ? '' : '🔒') + '</div>';
+      if (unlocked) {
+        node.addEventListener('click', (function(t, c, i){ return function(){ openModal(t,c,i); }; })(topic, sec.color, idx));
+      } else {
+        node.addEventListener('click', function(){ showToast('🔒 이전 항목을 먼저 완료하세요'); });
+      }
+      grid.appendChild(node);
+      gi++;
+    });
+  });
+}
+
+// ============================================================
+//  MODAL
+// ============================================================
+var currentTopicIdx = 0;
+var quizScores = {};
+var wrongNotes = {};
+var fcIdx = {};
+var fcScore = {};
+var activeTab = 'concept';
+
+function openModal(topic, color, idx) {
+  currentTopicIdx = idx;
+  activeTab = 'concept';
+  renderModalContent(topic, color);
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  renderMap();
+}
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function switchMTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.m-tab').forEach(function(b){ b.classList.remove('active'); });
+  var el = document.getElementById('tab-' + tab);
+  if (el) el.classList.add('active');
+  var topic = ALL_TOPICS[currentTopicIdx];
+  var sec = SECTIONS.find(function(s){ return s.topics.includes(topic); });
+  renderModalBody(topic, sec.color);
+}
+
+function renderModalContent(topic, color) {
+  document.getElementById('mId').textContent = topic.id;
+  document.getElementById('mTitle').textContent = topic.label;
+  var hasFlash = !!(topic.flashcards && topic.flashcards.length);
+  var hasCheat = !!(topic.cheatsheet && topic.cheatsheet.length);
+  document.getElementById('tab-flash').style.display = hasFlash ? '' : 'none';
+  document.getElementById('tab-cheat').style.display = hasCheat ? '' : 'none';
+  ['concept','flash','quiz','cheat','wrong'].forEach(function(t){
+    var e = document.getElementById('tab-' + t); if(e) e.classList.remove('active');
+  });
+  document.getElementById('tab-concept').classList.add('active');
+  activeTab = 'concept';
+  var done = isTopicDone(topic.id);
+  var st = document.getElementById('mStatus');
+  st.textContent = done ? '✅ 완료! 다음 항목으로 이동하세요' : '퀴즈 70% 이상 정답 시 완료 처리됩니다';
+  st.className = 'completion-status' + (done ? ' done' : '');
+  renderModalBody(topic, color);
+}
+
+function renderModalBody(topic, color) {
+  var body = document.getElementById('mBody');
+  if (activeTab === 'concept') {
+    body.innerHTML =
+      '<div class="concept-section"><div class="concept-label">CONCEPT</div><div class="concept-text">' + topic.concept + '</div></div>' +
+      '<div class="concept-section"><div class="concept-label">CODE EXAMPLE</div><div class="code-block">' + topic.code + '</div></div>' +
+      '<div class="concept-section"><div class="key-point">💡 핵심 포인트: ' + topic.keypoint + '</div></div>';
+  } else if (activeTab === 'flash') {
+    renderFlashPanel(topic, color);
+  } else if (activeTab === 'cheat') {
+    renderCheatPanel(topic);
+  } else if (activeTab === 'wrong') {
+    renderWrongPanel(topic);
+  } else {
+    renderQuizPanel(topic, color);
+  }
+}
+
+// ============================================================
+//  FLASHCARD
+// ============================================================
+function renderFlashPanel(topic, color) {
+  if (!topic.flashcards || !topic.flashcards.length) {
+    document.getElementById('mBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">플래시카드가 없습니다.</div>';
+    return;
+  }
+  if (fcIdx[topic.id] === undefined) fcIdx[topic.id] = 0;
+  if (!fcScore[topic.id]) fcScore[topic.id] = {known:0, unknown:0};
+  var cards = topic.flashcards;
+  var ci = fcIdx[topic.id];
+  var card = cards[ci];
+  var sc = fcScore[topic.id];
+  var dots = cards.map(function(_,i){
+    return '<div style="width:8px;height:8px;border-radius:50%;background:' + (i===ci ? color : 'var(--border)') + ';transition:background .3s;cursor:pointer" onclick="fcJump(\'' + topic.id + '\',' + i + ')"></div>';
+  }).join('');
+
+  document.getElementById('mBody').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+      '<div style="font-family:Space Mono,monospace;font-size:11px;color:var(--muted)">' + (ci+1) + ' / ' + cards.length + '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<span style="font-size:11px;color:#3fb950;font-family:Space Mono,monospace">✅ ' + sc.known + '</span>' +
+        '<span style="font-size:11px;color:#f78166;font-family:Space Mono,monospace">❌ ' + sc.unknown + '</span>' +
+        '<button class="btn" style="font-size:11px;padding:4px 10px;color:#58a6ff;border-color:rgba(88,166,255,.3)" onclick="shuffleFlash(\'' + topic.id + '\')">🔀 셔플</button>' +
+      '</div>' +
+    '</div>' +
+    '<div style="width:100%;height:6px;background:var(--border);border-radius:99px;margin-bottom:16px;overflow:hidden">' +
+      '<div style="height:100%;width:' + Math.round(ci/cards.length*100) + '%;background:' + color + ';border-radius:99px;transition:width .4s"></div>' +
+    '</div>' +
+    '<div id="fc-card" onclick="flipFlash(\'' + topic.id + '\')" style="background:var(--surface);border:1px solid ' + color + '40;border-radius:16px;padding:28px 24px;min-height:190px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;position:relative;transition:all .3s;user-select:none;">' +
+      '<div style="position:absolute;top:12px;left:14px;font-size:9px;font-family:Space Mono,monospace;color:' + color + ';background:' + color + '20;padding:3px 8px;border-radius:4px;letter-spacing:1px">' + card.category + '</div>' +
+      '<div id="fc-front" style="font-size:15px;font-weight:700;line-height:1.7;color:var(--text)">' + card.front + '</div>' +
+      '<div id="fc-back" style="display:none;font-size:13px;line-height:1.9;color:var(--text)">' + card.back + '</div>' +
+      '<div id="fc-hint" style="font-size:11px;color:var(--muted);position:absolute;bottom:12px">👆 클릭하여 뒤집기</div>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px">' +
+      '<button class="btn" onclick="fcNav(\'' + topic.id + '\',-1)">← 이전</button>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button class="btn" style="color:#f78166;border-color:rgba(247,129,102,.3);background:rgba(247,129,102,.08)" onclick="fcMark(\'' + topic.id + '\',\'unknown\')">❌ 모르겠어</button>' +
+        '<button class="btn" style="color:#3fb950;border-color:rgba(63,185,80,.3);background:rgba(63,185,80,.08)" onclick="fcMark(\'' + topic.id + '\',\'known\')">✅ 알겠어!</button>' +
+      '</div>' +
+      '<button class="btn" onclick="fcNav(\'' + topic.id + '\',1)">다음 →</button>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap">' + dots + '</div>';
+}
+
+function flipFlash(tid) {
+  var front = document.getElementById('fc-front');
+  var back = document.getElementById('fc-back');
+  var hint = document.getElementById('fc-hint');
+  var card = document.getElementById('fc-card');
+  if (!front) return;
+  var showing = front.style.display !== 'none';
+  if (showing) {
+    front.style.display = 'none'; back.style.display = 'block';
+    hint.textContent = '👆 다시 클릭하면 앞면으로';
+    card.style.background = 'rgba(63,185,80,.06)'; card.style.borderColor = '#3fb95060';
+  } else {
+    front.style.display = 'block'; back.style.display = 'none';
+    hint.textContent = '👆 클릭하여 뒤집기';
+    card.style.background = 'var(--surface)'; card.style.borderColor = '';
+  }
+}
+
+function fcNav(tid, dir) {
+  var topic = ALL_TOPICS.find(function(t){ return t.id === tid; });
+  if (!topic || !topic.flashcards) return;
+  fcIdx[tid] = (fcIdx[tid] + dir + topic.flashcards.length) % topic.flashcards.length;
+  var sec = SECTIONS.find(function(s){ return s.topics.includes(topic); });
+  renderFlashPanel(topic, sec.color);
+}
+
+function fcJump(tid, i) {
+  var topic = ALL_TOPICS.find(function(t){ return t.id === tid; });
+  if (!topic) return;
+  fcIdx[tid] = i;
+  var sec = SECTIONS.find(function(s){ return s.topics.includes(topic); });
+  renderFlashPanel(topic, sec.color);
+}
+
+function fcMark(tid, result) {
+  if (!fcScore[tid]) fcScore[tid] = {known:0, unknown:0};
+  fcScore[tid][result]++;
+  fcNav(tid, 1);
+}
+
+function shuffleFlash(tid) {
+  var topic = ALL_TOPICS.find(function(t){ return t.id === tid; });
+  if (!topic || !topic.flashcards) return;
+  for (var i = topic.flashcards.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = topic.flashcards[i]; topic.flashcards[i] = topic.flashcards[j]; topic.flashcards[j] = tmp;
+  }
+  fcIdx[tid] = 0;
+  var sec = SECTIONS.find(function(s){ return s.topics.includes(topic); });
+  renderFlashPanel(topic, sec.color);
+  showToast('🔀 카드 순서를 섞었습니다!');
+}
+
+// ============================================================
+//  CHEATSHEET
+// ============================================================
+function renderCheatPanel(topic) {
+  if (!topic.cheatsheet) {
+    document.getElementById('mBody').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">치트시트가 없습니다.</div>';
+    return;
+  }
+  var html = '<div style="margin-bottom:12px;font-size:10px;color:var(--muted);font-family:Space Mono,monospace;letter-spacing:2px">QUICK REFERENCE</div><div style="display:grid;gap:8px">';
+  topic.cheatsheet.forEach(function(row) {
+    html += '<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ' + row.color + ';border-radius:0 10px 10px 0;padding:12px 14px;display:grid;grid-template-columns:170px 1fr;gap:12px;align-items:start">' +
+      '<div><div style="font-family:Space Mono,monospace;font-size:12px;color:' + row.color + ';font-weight:700">' + row.func + '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:3px">&rarr; ' + row.ret + '</div></div>' +
+      '<div><div style="font-size:12px;color:var(--text);margin-bottom:4px">' + row.desc + '</div>' +
+      '<div style="font-family:Space Mono,monospace;font-size:11px;color:var(--muted);background:var(--card);padding:4px 8px;border-radius:4px;display:inline-block">' + row.ex + '</div></div>' +
+      '</div>';
+  });
+  html += '</div>';
+  document.getElementById('mBody').innerHTML = html;
+}
+
+// ============================================================
+//  WRONG NOTE
+// ============================================================
+function renderWrongPanel(topic) {
+  var notes = wrongNotes[topic.id] || {};
+  var keys = Object.keys(notes);
+  if (!keys.length) {
+    document.getElementById('mBody').innerHTML =
+      '<div style="text-align:center;padding:48px 20px;color:var(--muted)">' +
+      '<div style="font-size:36px;margin-bottom:12px">🎉</div>' +
+      '<div style="font-size:14px">오답 기록이 없습니다!</div>' +
+      '<div style="font-size:12px;margin-top:6px">빈칸 퀴즈를 풀면 틀린 항목이 여기 모입니다.</div></div>';
+    return;
+  }
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+    '<div style="font-size:10px;color:var(--muted);font-family:Space Mono,monospace;letter-spacing:2px">WRONG NOTE — ' + keys.length + '개</div>' +
+    '<button class="btn" style="font-size:11px;padding:4px 10px;color:#f78166;border-color:rgba(247,129,102,.3)" onclick="clearWrongTopic(\'' + topic.id + '\')">초기화</button>' +
+    '</div><div style="display:grid;gap:8px">';
+  keys.sort(function(a,b){ return notes[b].count - notes[a].count; }).forEach(function(k){
+    var n = notes[k];
+    html += '<div style="background:var(--card);border:1px solid rgba(247,129,102,.3);border-left:3px solid #f78166;border-radius:0 10px 10px 0;padding:12px 14px">' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">' + esc(n.q) + '</div>' +
+      '<div style="font-size:10px;color:#f78166;margin-bottom:2px;font-family:Space Mono,monospace">내 답</div>' +
+      '<div style="font-family:Space Mono,monospace;font-size:12px;color:#f78166;margin-bottom:6px">' + esc(n.your||'(공백)') + '</div>' +
+      '<div style="font-size:10px;color:#3fb950;margin-bottom:2px;font-family:Space Mono,monospace">정답</div>' +
+      '<div style="font-family:Space Mono,monospace;font-size:12px;color:#3fb950">' + esc(n.correct) + '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:8px">틀린 횟수: ' + n.count + '회</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('mBody').innerHTML = html;
+}
+
+function clearWrongTopic(tid) {
+  if (wrongNotes[tid]) delete wrongNotes[tid];
+  var topic = ALL_TOPICS.find(function(t){ return t.id === tid; });
+  renderWrongPanel(topic);
+  showToast('오답 노트를 초기화했습니다.');
+}
+
+// ============================================================
+//  QUIZ PANEL
+// ============================================================
+function renderQuizPanel(topic, color) {
+  var body = document.getElementById('mBody');
+  var qs = topic.quizzes;
+  var sc = quizScores[topic.id] || {correct:0, total:0, passed:false};
+  var pct = sc.total ? Math.round(sc.correct/sc.total*100) : 0;
+  var done = isTopicDone(topic.id);
+
+  var html = '<div class="quiz-score" id="qscore-' + topic.id + '">' +
+    '<div class="qs-item"><div class="qs-val qs-ok">' + sc.correct + '</div><div class="qs-label">정답</div></div>' +
+    '<div class="qs-item"><div class="qs-val qs-ng">' + (sc.total-sc.correct) + '</div><div class="qs-label">오답</div></div>' +
+    '<div class="qs-item"><div class="qs-val qs-pct">' + pct + '%</div><div class="qs-label">정답률</div></div>' +
+    '</div>';
+
+  if (done) {
+    html += '<div class="unlock-banner show"><h3>🎉 완료!</h3><p>이 항목을 마스터했습니다. 다음 항목이 잠금 해제되었습니다.</p></div>';
+  }
+
+  qs.forEach(function(q, qi) {
+    var codeHTML = '';
+    q.template.forEach(function(seg) {
+      if (seg.t === 'code') {
+        codeHTML += '<span>' + esc(seg.v) + '</span>';
+      } else {
+        codeHTML += '<input class="blank-inp" id="b_' + topic.id + '_' + qi + '_' + qi + '_' + seg.h.replace(/\s/g,'_') + '" data-answer="' + esc(seg.a) + '" size="' + seg.s + '" placeholder="?" autocomplete="off" spellcheck="false">';
+      }
+    });
+    var answers = q.template.filter(function(s){ return s.t==='blank'; }).map(function(s){ return s.a; }).join(' | ');
+    html += '<div class="quiz-item" id="qi_' + topic.id + '_' + qi + '">' +
+      '<div class="q-prompt">Q' + (qi+1) + '. ' + q.prompt + '</div>' +
+      '<div class="code-block" style="line-height:2">' + codeHTML + '</div>' +
+      '<div class="q-actions">' +
+        '<button class="btn btn-primary" id="checkbtn_' + topic.id + '_' + qi + '">채점</button>' +
+        '<button class="btn" id="ansbtn_' + topic.id + '_' + qi + '">정답 보기</button>' +
+        '<button class="btn" id="resetbtn_' + topic.id + '_' + qi + '">초기화</button>' +
+      '</div>' +
+      '<div class="answer-box" id="ans_' + topic.id + '_' + qi + '">' +
+        '<div class="ans-label">ANSWER</div>' +
+        '<div class="ans-val">' + esc(answers) + '</div>' +
+        '<div class="ans-exp">' + q.explain + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+
+  html += '<div class="threshold-note">🎯 70% 이상 정답 시 다음 항목이 잠금 해제됩니다</div>';
+  body.innerHTML = html;
+
+  // attach events
+  qs.forEach(function(q, qi) {
+    var btn = document.getElementById('checkbtn_' + topic.id + '_' + qi);
+    if (btn) btn.onclick = (function(t,i,c){ return function(){ checkQ(t,i,c); }; })(topic, qi, color);
+    var ans = document.getElementById('ansbtn_' + topic.id + '_' + qi);
+    if (ans) ans.onclick = (function(tid,i){ return function(){ showAns(tid,i); }; })(topic.id, qi);
+    var rst = document.getElementById('resetbtn_' + topic.id + '_' + qi);
+    if (rst) rst.onclick = (function(t,i){ return function(){ resetQ(t,i); }; })(topic, qi);
+  });
+}
+
+function checkQ(topic, qi, color) {
+  var q = topic.quizzes[qi];
+  var blanks = q.template.filter(function(s){ return s.t==='blank'; });
+  var allOk = true;
+
+  blanks.forEach(function(b) {
+    var inputId = 'b_' + topic.id + '_' + qi + '_' + qi + '_' + b.h.replace(/\s/g,'_');
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    var val = inp.value.trim();
+    var ok = val.toLowerCase() === b.a.toLowerCase();
+    inp.classList.remove('ok','ng');
+    inp.classList.add(ok ? 'ok' : 'ng');
+    if (!ok) {
+      allOk = false;
+      if (!wrongNotes[topic.id]) wrongNotes[topic.id] = {};
+      var nk = 'Q' + (qi+1) + '_' + b.h;
+      if (!wrongNotes[topic.id][nk]) {
+        wrongNotes[topic.id][nk] = {q:'Q'+(qi+1)+'. '+q.prompt, your:val||'(공백)', correct:b.a, count:0};
+      } else {
+        wrongNotes[topic.id][nk].your = val||'(공백)';
+      }
+      wrongNotes[topic.id][nk].count++;
+    }
+  });
+
+  if (!quizScores[topic.id]) quizScores[topic.id] = {correct:0, total:0, passed:false};
+  quizScores[topic.id].total++;
+  if (allOk) quizScores[topic.id].correct++;
+
+  var qiEl = document.getElementById('qi_' + topic.id + '_' + qi);
+  if (qiEl) { qiEl.classList.remove('q-correct','q-wrong'); qiEl.classList.add(allOk ? 'q-correct' : 'q-wrong'); }
+  if (!allOk) showAns(topic.id, qi);
+
+  var sc = quizScores[topic.id];
+  if (sc.correct/sc.total >= 0.7 && sc.total >= Math.min(2, topic.quizzes.length) && !sc.passed) {
+    sc.passed = true;
+    var st = getState(); st[topic.id] = true; setState(st);
+    showToast('🎉 통과! 다음 항목이 잠금 해제되었습니다!');
+    var mst = document.getElementById('mStatus');
+    if (mst) { mst.textContent='✅ 완료!'; mst.className='completion-status done'; }
+  }
+
+  var sc2 = quizScores[topic.id];
+  var p = sc2.total ? Math.round(sc2.correct/sc2.total*100) : 0;
+  var scoreEl = document.getElementById('qscore-' + topic.id);
+  if (scoreEl) {
+    scoreEl.innerHTML =
+      '<div class="qs-item"><div class="qs-val qs-ok">' + sc2.correct + '</div><div class="qs-label">정답</div></div>' +
+      '<div class="qs-item"><div class="qs-val qs-ng">' + (sc2.total-sc2.correct) + '</div><div class="qs-label">오답</div></div>' +
+      '<div class="qs-item"><div class="qs-val qs-pct">' + p + '%</div><div class="qs-label">정답률</div></div>';
+  }
+}
+
+function showAns(tid, qi) {
+  var box = document.getElementById('ans_' + tid + '_' + qi);
+  if (box) box.classList.add('show');
+}
+
+function resetQ(topic, qi) {
+  var q = topic.quizzes[qi];
+  var blanks = q.template.filter(function(s){ return s.t==='blank'; });
+  blanks.forEach(function(b){
+    var inputId = 'b_' + topic.id + '_' + qi + '_' + qi + '_' + b.h.replace(/\s/g,'_');
+    var inp = document.getElementById(inputId);
+    if (inp) { inp.value=''; inp.classList.remove('ok','ng'); }
+  });
+  var qiEl = document.getElementById('qi_' + topic.id + '_' + qi);
+  if (qiEl) qiEl.classList.remove('q-correct','q-wrong');
+  var ans = document.getElementById('ans_' + topic.id + '_' + qi);
+  if (ans) ans.classList.remove('show');
+}
+
+function prevTopic() {
+  if (currentTopicIdx > 0) {
+    var t = ALL_TOPICS[currentTopicIdx-1];
+    var sec = SECTIONS.find(function(s){ return s.topics.includes(t); });
+    currentTopicIdx--;
+    renderModalContent(t, sec.color);
+  }
+}
+function nextTopic() {
+  if (currentTopicIdx < ALL_TOPICS.length-1) {
+    if (!isTopicUnlocked(currentTopicIdx+1)) { showToast('🔒 현재 항목을 먼저 완료하세요 (퀴즈 70%)'); return; }
+    var t = ALL_TOPICS[currentTopicIdx+1];
+    var sec = SECTIONS.find(function(s){ return s.topics.includes(t); });
+    currentTopicIdx++;
+    renderModalContent(t, sec.color);
+  }
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+function fadeOut(e, href) {
+  e.preventDefault();
+  document.body.style.opacity = '0';
+  document.body.style.transition = 'opacity .3s';
+  setTimeout(function(){ window.location.href = href; }, 300);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+document.body.style.opacity = '0';
+document.body.style.transition = 'opacity .4s';
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+renderMap();
+requestAnimationFrame(function(){ document.body.style.opacity='1'; });
+
+</script>
+
+</body>
+</html>
