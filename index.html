@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIL/Pillow 실기 암기 훈련</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --card: #1c2128;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --accent3: #3fb950;
+    --accent4: #d2a8ff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --code-bg: #0d1117;
+    --yellow: #e3b341;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent3);
+    background: rgba(63,185,80,0.1);
+    border: 1px solid rgba(63,185,80,0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 2px;
+  }
+  header h1 { font-size: 18px; font-weight: 700; color: var(--text); }
+  header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all .2s;
+    font-weight: 400;
+  }
+  .tab-btn.active {
+    background: var(--card);
+    color: var(--text);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .progress-bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent4));
+    border-radius: 99px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .progress-stats { display: flex; gap: 16px; }
+  .stat { text-align: center; }
+  .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+  .stat-val.correct { color: var(--accent3); }
+  .stat-val.wrong { color: var(--accent2); }
+  .stat-val.total { color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* Flashcard */
+  .flashcard-section { display: none; }
+  .flashcard-section.active { display: block; }
+
+  .flashcard-container {
+    perspective: 1200px;
+    margin: 0 auto 24px;
+    cursor: pointer;
+    height: 320px;
+  }
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform .55s cubic-bezier(.4,0,.2,1);
+  }
+  .flashcard-inner.flipped { transform: rotateY(180deg); }
+
+  .flashcard-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px;
+    gap: 16px;
+    overflow: hidden;
+  }
+  .card-front {
+    background: linear-gradient(135deg, var(--card) 0%, #1a2332 100%);
+  }
+  .card-back {
+    background: linear-gradient(135deg, #0f1e12 0%, var(--card) 100%);
+    transform: rotateY(180deg);
+    align-items: flex-start;
+  }
+
+  .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+  }
+  .tag-method { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+  .tag-result { background: rgba(63,185,80,.15); color: var(--accent3); border: 1px solid rgba(63,185,80,.3); }
+
+  .card-hint { position: absolute; bottom: 14px; font-size: 11px; color: var(--muted); }
+
+  .method-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .method-sub { font-size: 13px; color: var(--muted); text-align: center; }
+
+  .back-title { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .back-desc { font-size: 15px; color: var(--text); font-weight: 500; line-height: 1.6; }
+
+  .code-block {
+    width: 100%;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .c-kw { color: #ff7b72; }
+  .c-fn { color: #d2a8ff; }
+  .c-str { color: #a5d6ff; }
+  .c-num { color: #f2cc60; }
+  .c-cm { color: #8b949e; font-style: italic; }
+  .c-cls { color: #ffa657; }
+
+  .cnn-note {
+    width: 100%;
+    background: rgba(210,168,255,0.06);
+    border-left: 3px solid var(--accent4);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--accent4);
+    line-height: 1.6;
+  }
+
+  .fc-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .fc-counter { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+    font-weight: 500;
+  }
+  .btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 700; }
+  .btn-primary:hover { background: #79b8ff; color: #0d1117; }
+  .btn-danger { background: rgba(247,129,102,.15); color: var(--accent2); border-color: rgba(247,129,102,.3); }
+  .btn-success { background: rgba(63,185,80,.15); color: var(--accent3); border-color: rgba(63,185,80,.3); }
+  .shuffle-btn {
+    font-size: 11px;
+    padding: 6px 12px;
+    background: rgba(88,166,255,.1);
+    border-color: rgba(88,166,255,.3);
+    color: var(--accent);
+  }
+
+  /* Quiz */
+  .quiz-section { display: none; }
+  .quiz-section.active { display: block; }
+
+  .quiz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 20px;
+    transition: border-color .2s;
+  }
+  .quiz-card.correct-card { border-color: var(--accent3); background: rgba(63,185,80,.04); }
+  .quiz-card.wrong-card { border-color: var(--accent2); background: rgba(247,129,102,.04); }
+
+  .quiz-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .q-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+  .q-tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .quiz-prompt {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+
+  .code-quiz {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 2;
+    margin-bottom: 16px;
+    white-space: pre-wrap;
+  }
+
+  .blank-input {
+    display: inline-block;
+    background: rgba(88,166,255,0.1);
+    border: 1.5px solid var(--accent);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    min-width: 100px;
+    outline: none;
+    vertical-align: middle;
+    transition: all .2s;
+  }
+  .blank-input:focus { background: rgba(88,166,255,.18); box-shadow: 0 0 0 2px rgba(88,166,255,.25); }
+  .blank-input.correct { background: rgba(63,185,80,.15); border-color: var(--accent3); color: var(--accent3); }
+  .blank-input.wrong { background: rgba(247,129,102,.15); border-color: var(--accent2); color: var(--accent2); }
+
+  .answer-reveal {
+    display: none;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .answer-reveal.show { display: block; }
+  .answer-reveal .label { font-size: 10px; color: var(--accent3); letter-spacing: 1px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  .answer-reveal .ans { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent3); }
+  .answer-reveal .explain { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+
+  .quiz-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+  .result-banner {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .result-banner.show { display: flex; }
+  .result-banner.ok { color: var(--accent3); }
+  .result-banner.ng { color: var(--accent2); }
+
+  .quiz-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  /* Cheatsheet */
+  .sheet-section { display: none; }
+  .sheet-section.active { display: block; }
+
+  .method-grid { display: grid; gap: 12px; }
+  .method-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    align-items: start;
+    transition: border-color .15s;
+  }
+  .method-row:hover { border-color: var(--accent); }
+  .method-sig {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--accent);
+    line-height: 1.6;
+  }
+  .method-sig .obj { color: var(--accent4); }
+  .method-sig .arg { color: var(--yellow); }
+  .method-info { }
+  .method-info strong { font-size: 13px; color: var(--text); font-weight: 700; }
+  .method-info p { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+  .method-info .param-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin: 3px 2px 0;
+    background: rgba(227,179,65,.12);
+    color: var(--yellow);
+    border: 1px solid rgba(227,179,65,.3);
+  }
+
+  /* Wrongnote */
+  .wrong-section { display: none; }
+  .wrong-section.active { display: block; }
+  .wrong-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .wrong-empty .icon { font-size: 36px; margin-bottom: 12px; }
+  .wrong-note-item {
+    background: var(--card);
+    border: 1px solid rgba(247,129,102,.3);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 10px 10px 0;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .wn-q { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .wn-your { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent2); margin-bottom: 4px; }
+  .wn-correct { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent3); }
+  .wn-label { font-size: 10px; color: var(--muted); margin-bottom: 2px; letter-spacing: 1px; }
+  .wn-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent2); margin-top: 6px; }
+
+  /* Misc */
+  .section-title {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  @media (max-width: 600px) {
+    .method-row { grid-template-columns: 1fr; }
+    .method-sig { font-size: 11px; }
+    .flashcard-container { height: 380px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div>
+      <div class="logo">PIL / PILLOW</div>
+    </div>
+    <div>
+      <h1>이미지 메서드 실기 암기 훈련</h1>
+      <p>CNN 전처리 기초 · 실기 시험 대비 · 완전 암기 목표</p>
+    </div>
+  </header>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-stats">
+      <div class="stat"><div class="stat-val correct" id="statCorrect">0</div><div class="stat-label">정답</div></div>
+      <div class="stat"><div class="stat-val wrong" id="statWrong">0</div><div class="stat-label">오답</div></div>
+      <div class="stat"><div class="stat-val total" id="statTotal">0</div><div class="stat-label">시도</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('flash')">🃏 플래시카드</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">✏️ 빈칸 퀴즈</button>
+    <button class="tab-btn" onclick="switchTab('sheet')">📋 치트시트</button>
+    <button class="tab-btn" onclick="switchTab('wrong')">📝 오답노트</button>
+  </div>
+
+  <!-- ====== FLASHCARD ====== -->
+  <div class="flashcard-section active" id="tab-flash">
+    <div class="fc-nav">
+      <span class="fc-counter" id="fcCounter">1 / 8</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn shuffle-btn" onclick="shuffleCards()">🔀 셔플</button>
+        <button class="btn" onclick="prevCard()">← 이전</button>
+        <button class="btn" onclick="nextCard()">다음 →</button>
+      </div>
+    </div>
+
+    <div class="flashcard-container" onclick="flipCard()">
+      <div class="flashcard-inner" id="flashcardInner">
+        <div class="flashcard-face card-front" id="cardFront">
+          <span class="card-tag tag-method" id="cardTag">METHOD</span>
+          <div class="method-name" id="cardMethodName">Image.open()</div>
+          <div class="method-sub" id="cardSub">PIL.Image 모듈</div>
+          <span class="card-hint">클릭하여 뒤집기</span>
+        </div>
+        <div class="flashcard-face card-back" id="cardBack">
+          <span class="card-tag tag-result">RESULT</span>
+          <div class="back-title">📌 설명</div>
+          <div class="back-desc" id="cardDesc"></div>
+          <div class="code-block" id="cardCode"></div>
+          <div class="cnn-note" id="cardCnn"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:8px">
+      <button class="btn btn-success" onclick="markKnown()" style="margin-right:8px">✅ 알겠어!</button>
+      <button class="btn btn-danger" onclick="markUnknown()">❌ 다시 볼게</button>
+    </div>
+  </div>
+
+  <!-- ====== QUIZ ====== -->
+  <div class="quiz-section" id="tab-quiz">
+    <div class="quiz-controls">
+      <p class="section-title">빈칸 채우기 퀴즈 — 랜덤 출제</p>
+      <div style="display:flex;gap:8px">
+        <button class="btn shuffle-btn" onclick="initQuiz()">🔀 새 문제 세트</button>
+        <button class="btn btn-primary" onclick="checkAll()">전체 채점</button>
+      </div>
+    </div>
+    <div id="quizContainer"></div>
+  </div>
+
+  <!-- ====== CHEATSHEET ====== -->
+  <div class="sheet-section" id="tab-sheet">
+    <p class="section-title">PIL/Pillow 메서드 전체 요약</p>
+    <div class="method-grid" id="sheetGrid"></div>
+  </div>
+
+  <!-- ====== WRONG NOTE ====== -->
+  <div class="wrong-section" id="tab-wrong">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <p class="section-title">오답 노트</p>
+      <button class="btn btn-danger" style="font-size:11px;padding:5px 10px" onclick="clearWrong()">초기화</button>
+    </div>
+    <div id="wrongContainer"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const METHODS = [
+  {
+    id: 'open',
+    name: 'Image.open(path)',
+    sub: 'PIL.Image 모듈',
+    desc: '지정한 경로의 이미지 파일을 열어 PIL Image 객체로 반환합니다. JPEG, PNG, BMP 등 다양한 형식을 지원합니다.',
+    params: ['path: str — 이미지 파일 경로'],
+    returns: 'PIL.Image.Image 객체',
+    code: `<span class="c-kw">from</span> PIL <span class="c-kw">import</span> <span class="c-cls">Image</span>
+
+img = <span class="c-cls">Image</span>.<span class="c-fn">open</span>(<span class="c-str">"daisy.jpg"</span>)
+<span class="c-kw">print</span>(img.size)   <span class="c-cm"># (width, height) 확인</span>
+<span class="c-kw">print</span>(img.mode)   <span class="c-cm"># 'RGB', 'L' 등</span>`,
+    cnn: '🧠 CNN 입력 전 가장 먼저 호출. img.size로 원본 크기를 확인합니다.'
+  },
+  {
+    id: 'show',
+    name: 'img.show()',
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: '이미지를 OS 기본 이미지 뷰어로 즉시 열어 확인합니다. Jupyter에서는 plt.imshow()를 더 많이 사용합니다.',
+    params: [],
+    returns: 'None',
+    code: `img = <span class="c-cls">Image</span>.<span class="c-fn">open</span>(<span class="c-str">"daisy.jpg"</span>)
+img.<span class="c-fn">show</span>()  <span class="c-cm"># 기본 뷰어로 열기</span>
+
+<span class="c-cm"># Jupyter에서는 matplotlib 사용 권장</span>
+<span class="c-kw">import</span> matplotlib.pyplot <span class="c-kw">as</span> plt
+plt.<span class="c-fn">imshow</span>(img)
+plt.<span class="c-fn">show</span>()`,
+    cnn: '🧠 전처리 전/후 이미지 상태를 빠르게 육안 확인할 때 사용합니다.'
+  },
+  {
+    id: 'save',
+    name: 'img.save(path)',
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: '이미지를 지정한 경로에 저장합니다. 확장자에 따라 형식이 자동으로 결정됩니다 (.jpg → JPEG, .png → PNG).',
+    params: ['path: str — 저장 경로 (확장자 포함)'],
+    returns: 'None',
+    code: `img.<span class="c-fn">save</span>(<span class="c-str">"output.jpg"</span>)   <span class="c-cm"># JPEG 저장</span>
+img.<span class="c-fn">save</span>(<span class="c-str">"output.png"</span>)   <span class="c-cm"># PNG 저장</span>
+
+<span class="c-cm"># 품질 옵션 (JPEG 전용)</span>
+img.<span class="c-fn">save</span>(<span class="c-str">"out.jpg"</span>, quality=<span class="c-num">95</span>)`,
+    cnn: '🧠 전처리 완료된 이미지를 학습용 데이터셋으로 저장할 때 사용합니다.'
+  },
+  {
+    id: 'resize',
+    name: 'img.resize((w, h))',
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: '이미지를 지정한 (width, height) 픽셀 크기로 변환합니다. 튜플 형태로 전달해야 하며, 비율이 자동으로 유지되지 않으므로 주의가 필요합니다.',
+    params: ['(width, height): tuple — 목표 크기 (픽셀)'],
+    returns: '새로운 PIL.Image.Image 객체',
+    code: `img_resized = img.<span class="c-fn">resize</span>((<span class="c-num">224</span>, <span class="c-num">224</span>))  <span class="c-cm"># CNN 표준 입력</span>
+img_resized = img.<span class="c-fn">resize</span>((<span class="c-num">64</span>, <span class="c-num">64</span>))   <span class="c-cm"># 소형 CNN</span>
+
+<span class="c-cm"># for 반복문 전처리 패턴</span>
+<span class="c-kw">for</span> f <span class="c-kw">in</span> file_list:
+    img = <span class="c-cls">Image</span>.<span class="c-fn">open</span>(path + f).<span class="c-fn">resize</span>((<span class="c-num">224</span>, <span class="c-num">224</span>))`,
+    cnn: '🧠 CNN은 고정 크기 입력을 요구합니다. VGG/ResNet은 224×224, 작은 모델은 32×32 또는 64×64를 주로 사용합니다.'
+  },
+  {
+    id: 'crop',
+    name: 'img.crop((l, t, r, b))',
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: '이미지에서 (left, top, right, bottom) 좌표로 지정한 직사각형 영역을 잘라냅니다. 좌표는 픽셀 단위입니다.',
+    params: ['(left, top, right, bottom): tuple — 잘라낼 영역 좌표'],
+    returns: '새로운 PIL.Image.Image 객체',
+    code: `<span class="c-cm"># 왼쪽 0, 위 0, 오른쪽 100, 아래 100 픽셀 영역</span>
+region = img.<span class="c-fn">crop</span>((<span class="c-num">0</span>, <span class="c-num">0</span>, <span class="c-num">100</span>, <span class="c-num">100</span>))
+
+<span class="c-cm"># 중앙 영역 자르기</span>
+w, h = img.size
+box = (w//<span class="c-num">4</span>, h//<span class="c-num">4</span>, w*<span class="c-num">3</span>//<span class="c-num">4</span>, h*<span class="c-num">3</span>//<span class="c-num">4</span>)
+center = img.<span class="c-fn">crop</span>(box)`,
+    cnn: '🧠 데이터 증강(Data Augmentation) 기법 중 하나. 랜덤 크롭으로 다양한 학습 데이터를 생성합니다.'
+  },
+  {
+    id: 'rotate',
+    name: 'img.rotate(angle)',
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: '이미지를 반시계 방향으로 angle도만큼 회전시킵니다. expand=True를 추가하면 잘리지 않게 캔버스가 확장됩니다.',
+    params: ['angle: float — 회전 각도 (반시계 방향)', 'expand: bool — 캔버스 자동 확장 (기본 False)'],
+    returns: '새로운 PIL.Image.Image 객체',
+    code: `rotated = img.<span class="c-fn">rotate</span>(<span class="c-num">90</span>)           <span class="c-cm"># 반시계 90도</span>
+rotated = img.<span class="c-fn">rotate</span>(<span class="c-num">45</span>, expand=<span class="c-kw">True</span>)  <span class="c-cm"># 확장</span>
+rotated = img.<span class="c-fn">rotate</span>(-<span class="c-num">90</span>)          <span class="c-cm"># 시계 90도</span>`,
+    cnn: '🧠 데이터 증강에 필수. 회전된 이미지로 모델의 회전 불변성(rotation invariance)을 학습시킵니다.'
+  },
+  {
+    id: 'convert',
+    name: "img.convert('L'/'RGB')",
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: "이미지의 색상 모드를 변환합니다. 'L'은 흑백(그레이스케일, 1채널), 'RGB'는 컬러(3채널)입니다.",
+    params: ["mode: str — 'L'(흑백), 'RGB'(컬러), 'RGBA'(투명도 포함)"],
+    returns: '새로운 PIL.Image.Image 객체',
+    code: `gray = img.<span class="c-fn">convert</span>(<span class="c-str">'L'</span>)    <span class="c-cm"># 흑백 (1채널)</span>
+rgb  = img.<span class="c-fn">convert</span>(<span class="c-str">'RGB'</span>)  <span class="c-cm"># 컬러 보장 (3채널)</span>
+
+<span class="c-cm"># PNG(RGBA) → JPEG 저장 전 필수</span>
+img.<span class="c-fn">convert</span>(<span class="c-str">'RGB'</span>).<span class="c-fn">save</span>(<span class="c-str">'out.jpg'</span>)`,
+    cnn: "🧠 CNN 입력 채널 수와 반드시 일치해야 합니다. 컬러 모델이면 'RGB', 흑백 모델이면 'L'로 변환합니다."
+  },
+  {
+    id: 'transpose',
+    name: 'img.transpose(method)',
+    sub: 'PIL Image 인스턴스 메서드',
+    desc: '이미지를 대칭 변환합니다. Image.FLIP_LEFT_RIGHT(좌우), Image.FLIP_TOP_BOTTOM(상하)을 인자로 전달합니다.',
+    params: ['method: Image 상수 — FLIP_LEFT_RIGHT / FLIP_TOP_BOTTOM / ROTATE_90 등'],
+    returns: '새로운 PIL.Image.Image 객체',
+    code: `<span class="c-cm"># 좌우 대칭</span>
+flipped_lr = img.<span class="c-fn">transpose</span>(<span class="c-cls">Image</span>.FLIP_LEFT_RIGHT)
+
+<span class="c-cm"># 상하 대칭</span>
+flipped_tb = img.<span class="c-fn">transpose</span>(<span class="c-cls">Image</span>.FLIP_TOP_BOTTOM)
+
+<span class="c-cm"># 90도 회전 (시계방향)</span>
+rot90 = img.<span class="c-fn">transpose</span>(<span class="c-cls">Image</span>.ROTATE_90)`,
+    cnn: '🧠 좌우 반전은 가장 흔한 데이터 증강 기법. 학습 데이터를 2배로 늘리는 효과가 있습니다.'
+  }
+];
+
+// ============================================================
+// QUIZ DATA
+// ============================================================
+const QUIZZES = [
+  {
+    id: 'q1',
+    prompt: 'daisy 폴더에서 이미지 2개를 읽어 224×224로 출력하는 코드입니다. 빈칸을 채우세요.',
+    tag: 'CNN 전처리',
+    template: [
+      { type: 'code', text: 'for img_file in daisy_file[:2]:\n    img = Image.' },
+      { type: 'blank', key: 'b1', answer: 'open', hint: '이미지를 여는 메서드', size: 6 },
+      { type: 'code', text: '(daisy_path + img_file).' },
+      { type: 'blank', key: 'b2', answer: 'resize', hint: '크기를 변경하는 메서드', size: 7 },
+      { type: 'code', text: '((224, 224))\n    plt.title(img_file)\n    plt.imshow(img)\n    plt.show()' }
+    ],
+    explain: 'Image.open()으로 파일을 열고, .resize((w,h))로 CNN 표준 입력 크기로 변환합니다. 튜플 ((224, 224)) 이중 괄호를 주의하세요!'
+  },
+  {
+    id: 'q2',
+    prompt: 'PNG 이미지를 흑백으로 변환한 뒤 저장하는 코드입니다.',
+    tag: '모드 변환',
+    template: [
+      { type: 'code', text: 'img = Image.' },
+      { type: 'blank', key: 'b1', answer: 'open', hint: '이미지 열기', size: 6 },
+      { type: 'code', text: '("flower.png")\ngray = img.' },
+      { type: 'blank', key: 'b2', answer: 'convert', hint: '모드 변환 메서드', size: 8 },
+      { type: 'code', text: "('L')\ngray." },
+      { type: 'blank', key: 'b3', answer: 'save', hint: '저장 메서드', size: 5 },
+      { type: 'code', text: '("gray_flower.png")' }
+    ],
+    explain: ".convert('L')은 흑백 변환, 'RGB'는 컬러 보장입니다. L은 Luminance(밝기)의 약자입니다."
+  },
+  {
+    id: 'q3',
+    prompt: '이미지를 좌우 반전시키는 데이터 증강 코드입니다.',
+    tag: '데이터 증강',
+    template: [
+      { type: 'code', text: 'img = Image.open("cat.jpg")\nflipped = img.' },
+      { type: 'blank', key: 'b1', answer: 'transpose', hint: '대칭 변환 메서드', size: 10 },
+      { type: 'code', text: '(Image.' },
+      { type: 'blank', key: 'b2', answer: 'FLIP_LEFT_RIGHT', hint: '좌우 반전 상수', size: 15 },
+      { type: 'code', text: ')' }
+    ],
+    explain: 'transpose()는 대칭/회전 변환에 사용합니다. FLIP_LEFT_RIGHT(좌우), FLIP_TOP_BOTTOM(상하)을 인자로 전달합니다.'
+  },
+  {
+    id: 'q4',
+    prompt: '이미지를 반시계 방향으로 90도 회전시키는 코드입니다.',
+    tag: '회전',
+    template: [
+      { type: 'code', text: 'img = Image.open("bird.jpg")\nrotated = img.' },
+      { type: 'blank', key: 'b1', answer: 'rotate', hint: '회전 메서드', size: 7 },
+      { type: 'code', text: '(' },
+      { type: 'blank', key: 'b2', answer: '90', hint: '반시계 방향 각도', size: 4 },
+      { type: 'code', text: ')' }
+    ],
+    explain: 'rotate(각도)는 반시계 방향이 기본입니다. 시계 방향은 음수(-90)를 사용하거나 expand=True로 캔버스를 늘릴 수 있습니다.'
+  },
+  {
+    id: 'q5',
+    prompt: '이미지를 열어 바로 기본 뷰어로 확인하는 코드입니다.',
+    tag: '이미지 확인',
+    template: [
+      { type: 'code', text: 'img = Image.' },
+      { type: 'blank', key: 'b1', answer: 'open', hint: '열기 메서드', size: 6 },
+      { type: 'code', text: '("rose.jpg")\nimg.' },
+      { type: 'blank', key: 'b2', answer: 'show', hint: '뷰어로 열기', size: 5 },
+      { type: 'code', text: '()' }
+    ],
+    explain: 'img.show()는 OS 기본 이미지 뷰어를 실행합니다. Jupyter 환경에서는 plt.imshow(img)를 더 자주 사용합니다.'
+  },
+  {
+    id: 'q6',
+    prompt: 'CNN 전처리 파이프라인: 이미지를 열고 → RGB 보장 → 224×224 리사이즈 → 저장합니다.',
+    tag: 'CNN 파이프라인',
+    template: [
+      { type: 'code', text: 'img = Image.open("input.png").' },
+      { type: 'blank', key: 'b1', answer: 'convert', hint: 'RGB 보장 메서드', size: 8 },
+      { type: 'code', text: "('RGB')\nimg = img." },
+      { type: 'blank', key: 'b2', answer: 'resize', hint: '크기 변경 메서드', size: 7 },
+      { type: 'code', text: '((224, 224))\nimg.' },
+      { type: 'blank', key: 'b3', answer: 'save', hint: '저장 메서드', size: 5 },
+      { type: 'code', text: '("processed.jpg")' }
+    ],
+    explain: '실기 시험 필수 패턴입니다! open → convert → resize → save 순서를 기억하세요.'
+  },
+  {
+    id: 'q7',
+    prompt: '이미지의 중앙 영역을 잘라내는 코드입니다.',
+    tag: '크롭',
+    template: [
+      { type: 'code', text: 'img = Image.open("photo.jpg")\nw, h = img.size\nbox = (w//4, h//4, w*3//4, h*3//4)\ncropped = img.' },
+      { type: 'blank', key: 'b1', answer: 'crop', hint: '영역 자르기 메서드', size: 5 },
+      { type: 'code', text: '(box)' }
+    ],
+    explain: 'crop(left, top, right, bottom) 순서입니다. 좌표는 픽셀 단위이며 반환값은 새로운 Image 객체입니다.'
+  },
+  {
+    id: 'q8',
+    prompt: '학습 데이터 전처리: 폴더 안의 모든 이미지를 64×64로 리사이즈해서 저장합니다.',
+    tag: '배치 전처리',
+    template: [
+      { type: 'code', text: 'import os\nfor fname in os.listdir("./data/"):\n    img = Image.' },
+      { type: 'blank', key: 'b1', answer: 'open', hint: '이미지 열기', size: 6 },
+      { type: 'code', text: '("./data/" + fname).' },
+      { type: 'blank', key: 'b2', answer: 'convert', hint: '채널 통일', size: 8 },
+      { type: 'code', text: "('RGB')." },
+      { type: 'blank', key: 'b3', answer: 'resize', hint: '크기 변경', size: 7 },
+      { type: 'code', text: '((64, 64))\n    img.' },
+      { type: 'blank', key: 'b4', answer: 'save', hint: '저장', size: 5 },
+      { type: 'code', text: '("./output/" + fname)' }
+    ],
+    explain: '실전 배치 처리 패턴입니다. 메서드 체이닝(open().convert().resize())으로 한 줄로 쓸 수도 있습니다.'
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let cardIndex = 0;
+let cardOrder = METHODS.map((_, i) => i);
+let isFlipped = false;
+let stats = { correct: 0, wrong: 0, total: 0 };
+let wrongNotes = {}; // key: quizId_blankKey → { q, your, correct, count }
+let quizState = []; // shuffled quiz order
+
+// ============================================================
+// UTILS
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function updateStats() {
+  document.getElementById('statCorrect').textContent = stats.correct;
+  document.getElementById('statWrong').textContent = stats.wrong;
+  document.getElementById('statTotal').textContent = stats.total;
+  const pct = stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(name) {
+  ['flash','quiz','sheet','wrong'].forEach(t => {
+    document.getElementById('tab-' + t).classList.remove('active');
+    document.getElementById('tab-' + t).style.display = 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.remove('active'));
+  const map = { flash: 0, quiz: 1, sheet: 2, wrong: 3 };
+  document.querySelectorAll('.tab-btn')[map[name]].classList.add('active');
+
+  const el = document.getElementById('tab-' + name);
+  el.style.display = 'block';
+  el.classList.add('active');
+
+  if (name === 'wrong') renderWrongNotes();
+}
+
+// ============================================================
+// FLASHCARD
+// ============================================================
+function renderCard() {
+  const m = METHODS[cardOrder[cardIndex]];
+  isFlipped = false;
+  document.getElementById('flashcardInner').classList.remove('flipped');
+
+  document.getElementById('cardMethodName').textContent = m.name;
+  document.getElementById('cardSub').textContent = m.sub;
+  document.getElementById('cardDesc').textContent = m.desc;
+  document.getElementById('cardCode').innerHTML = m.code;
+  document.getElementById('cardCnn').textContent = m.cnn;
+  document.getElementById('fcCounter').textContent = `${cardIndex + 1} / ${METHODS.length}`;
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('flashcardInner').classList.toggle('flipped', isFlipped);
+}
+
+function nextCard() {
+  cardIndex = (cardIndex + 1) % METHODS.length;
+  renderCard();
+}
+
+function prevCard() {
+  cardIndex = (cardIndex - 1 + METHODS.length) % METHODS.length;
+  renderCard();
+}
+
+function shuffleCards() {
+  cardOrder = shuffle(cardOrder);
+  cardIndex = 0;
+  renderCard();
+}
+
+function markKnown() {
+  stats.correct++;
+  stats.total++;
+  updateStats();
+  nextCard();
+}
+
+function markUnknown() {
+  stats.wrong++;
+  stats.total++;
+  updateStats();
+  // Add to wrong notes
+  const m = METHODS[cardOrder[cardIndex]];
+  const key = 'fc_' + m.id;
+  if (!wrongNotes[key]) wrongNotes[key] = { q: '플래시카드: ' + m.name, your: '(모름)', correct: m.desc.slice(0, 50) + '...', count: 0 };
+  wrongNotes[key].count++;
+  nextCard();
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+function initQuiz() {
+  quizState = shuffle(QUIZZES);
+  renderQuizzes();
+}
+
+function renderQuizzes() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+
+  quizState.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-card';
+    div.id = 'qcard-' + q.id;
+
+    let codeHTML = '';
+    q.template.forEach(seg => {
+      if (seg.type === 'code') {
+        codeHTML += `<span style="color:var(--text)">${escapeHtml(seg.text)}</span>`;
+      } else {
+        codeHTML += `<input class="blank-input" id="${q.id}_${seg.key}" data-answer="${seg.answer}" data-qid="${q.id}" data-key="${seg.key}" size="${seg.size}" placeholder="?" autocomplete="off" spellcheck="false">`;
+      }
+    });
+
+    div.innerHTML = `
+      <div class="quiz-meta">
+        <span class="q-num">Q${qi + 1}</span>
+        <span class="q-tag" style="background:rgba(88,166,255,.1);color:var(--accent);border:1px solid rgba(88,166,255,.3)">${q.tag}</span>
+      </div>
+      <div class="quiz-prompt">${q.prompt}</div>
+      <div class="code-quiz">${codeHTML}</div>
+      <div class="quiz-actions">
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="checkSingle('${q.id}')">채점</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px" onclick="showAnswer('${q.id}')">정답 보기</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px" onclick="resetSingle('${q.id}')">초기화</button>
+      </div>
+      <div class="answer-reveal" id="ans-${q.id}">
+        <div class="label">✅ 정답 & 해설</div>
+        <div class="ans" id="ans-correct-${q.id}"></div>
+        <div class="explain">${q.explain}</div>
+      </div>
+      <div class="result-banner" id="result-${q.id}"></div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function checkSingle(qid) {
+  const q = QUIZZES.find(x => x.id === qid);
+  const blanks = q.template.filter(s => s.type === 'blank');
+  let allCorrect = true;
+
+  blanks.forEach(b => {
+    const input = document.getElementById(`${qid}_${b.key}`);
+    const val = input.value.trim();
+    const ok = val.toLowerCase() === b.answer.toLowerCase();
+    input.classList.remove('correct', 'wrong');
+    input.classList.add(ok ? 'correct' : 'wrong');
+
+    stats.total++;
+    if (ok) {
+      stats.correct++;
+    } else {
+      stats.wrong++;
+      allCorrect = false;
+      // Wrong note
+      const noteKey = `${qid}_${b.key}`;
+      if (!wrongNotes[noteKey]) wrongNotes[noteKey] = { q: q.prompt + ' [' + b.key + ']', your: val || '(공백)', correct: b.answer, count: 0 };
+      else wrongNotes[noteKey].your = val || '(공백)';
+      wrongNotes[noteKey].count++;
+    }
+  });
+
+  updateStats();
+
+  const card = document.getElementById('qcard-' + qid);
+  card.classList.remove('correct-card', 'wrong-card');
+  card.classList.add(allCorrect ? 'correct-card' : 'wrong-card');
+
+  const rb = document.getElementById('result-' + qid);
+  rb.className = 'result-banner show ' + (allCorrect ? 'ok' : 'ng');
+  rb.textContent = allCorrect ? '✅ 완벽합니다!' : '❌ 오답이 있습니다. 정답을 확인하세요.';
+
+  if (!allCorrect) showAnswer(qid);
+}
+
+function showAnswer(qid) {
+  const q = QUIZZES.find(x => x.id === qid);
+  const blanks = q.template.filter(s => s.type === 'blank');
+  const ansDiv = document.getElementById('ans-' + qid);
+  const ansCorrect = document.getElementById('ans-correct-' + qid);
+  ansDiv.classList.add('show');
+  ansCorrect.textContent = blanks.map(b => `${b.key}: ${b.answer}`).join('  |  ');
+}
+
+function resetSingle(qid) {
+  const q = QUIZZES.find(x => x.id === qid);
+  const blanks = q.template.filter(s => s.type === 'blank');
+  blanks.forEach(b => {
+    const input = document.getElementById(`${qid}_${b.key}`);
+    input.value = '';
+    input.classList.remove('correct', 'wrong');
+  });
+  const card = document.getElementById('qcard-' + qid);
+  card.classList.remove('correct-card', 'wrong-card');
+  document.getElementById('ans-' + qid).classList.remove('show');
+  document.getElementById('result-' + qid).classList.remove('show');
+}
+
+function checkAll() {
+  quizState.forEach(q => checkSingle(q.id));
+}
+
+// ============================================================
+// CHEATSHEET
+// ============================================================
+function renderSheet() {
+  const grid = document.getElementById('sheetGrid');
+  grid.innerHTML = '';
+  METHODS.forEach(m => {
+    const paramHTML = m.params.map(p => `<span class="param-tag">${p}</span>`).join('');
+    grid.innerHTML += `
+      <div class="method-row">
+        <div>
+          <div class="method-sig"><span class="obj">Image/img</span>.${m.name.split('.').pop()}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace">→ ${m.returns}</div>
+          <div style="margin-top:6px">${paramHTML}</div>
+        </div>
+        <div class="method-info">
+          <strong>${m.name}</strong>
+          <p>${m.desc}</p>
+          <p style="margin-top:6px;color:var(--accent4);font-size:11px">${m.cnn}</p>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ============================================================
+// WRONG NOTES
+// ============================================================
+function renderWrongNotes() {
+  const container = document.getElementById('wrongContainer');
+  const keys = Object.keys(wrongNotes);
+  if (keys.length === 0) {
+    container.innerHTML = `
+      <div class="wrong-empty">
+        <div class="icon">🎉</div>
+        <div>오답 기록이 없습니다!</div>
+        <div style="margin-top:6px;font-size:12px">퀴즈를 풀면 틀린 항목이 여기 모입니다.</div>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = '';
+  keys.sort((a, b) => wrongNotes[b].count - wrongNotes[a].count).forEach(k => {
+    const n = wrongNotes[k];
+    container.innerHTML += `
+      <div class="wrong-note-item">
+        <div class="wn-q">${n.q}</div>
+        <div class="wn-label">내 답</div>
+        <div class="wn-your">${n.your}</div>
+        <div class="wn-label">정답</div>
+        <div class="wn-correct">${n.correct}</div>
+        <div class="wn-count">틀린 횟수: ${n.count}회</div>
+      </div>
+    `;
+  });
+}
+
+function clearWrong() {
+  wrongNotes = {};
+  renderWrongNotes();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+// Fix tab display
+document.querySelectorAll('.flashcard-section,.quiz-section,.sheet-section,.wrong-section').forEach(el => {
+  el.style.display = 'none';
+});
+document.getElementById('tab-flash').style.display = 'block';
+
+renderCard();
+renderSheet();
+initQuiz();
+</script>
+</body>
+</html>
